@@ -26,6 +26,7 @@
     - Correct shop table width
     - Correct shop table height
     - Correct GM-only label of "buy item" to correctly show "delete item"
+    - Dice helper now works with Foundry VTT v13 (updated hook signatures, Collection handling, guard against missing rolls)
   - Enhancements
     - Shops can now keep inventory when regenerating
     - Add label to regenerate inventory button
@@ -33,6 +34,7 @@
     - Added GM functionality to show shop to players (they must have access to the actor)
     - Add the ability to require the presence or absense of item tags when generating shop inventory
     - Add minimum and maximum price limits
+    - Dice helper now provides suggestions for all skills, not just combat skills
 
 `2.1.2` - 2025-06-15
 
