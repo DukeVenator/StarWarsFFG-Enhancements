@@ -14,7 +14,10 @@
 - Special ammo works on Codex II weapon and gear sheets. A loaded special magazine is what the weapon spends, and the weapon's own ammo counter is left alone while that magazine is loaded.
 - Attack animations accept a wildcard file path, and animation settings can be exported and imported.
 - Talents on the Codex II sheet have an Associated Skills tab.
-- Dice helper journal lookup uses the first journal of that name that actually has pages, repairs an empty journal, drops its cache when the journal changes, and only the GM creates the journal. Spending suggestions are sorted by how many results they require, and contextual suggestions are grouped.
+- Dice helper journal lookup uses the first journal of that name that actually has pages, repairs an empty journal, drops its cache when the journal changes, and only the GM creates the journal. Spending suggestions are sorted by how many results they require, and contextual suggestions are grouped. Initiative rolls and the helper's own messages are ignored, and journal text saved in the editor still parses.
+- Shop availability checks roll one pool instead of both halves, rarity above 10 no longer wraps into an easier check, and generation stops when the compendium runs out of candidates.
+- Combatant renaming falls back to neutral when the actor has no token, and talent pills still render when a talent has no description.
+- Unit tests for these paths run with `npm run test:unit` and do not need Foundry.
 
 `3.0.0` - 2026-03-28
 - Improvement: [Talent Reminders!](https://github.com/wrycu/StarWarsFFG-Enhancements/pull/232)

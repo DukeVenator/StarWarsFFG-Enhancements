@@ -216,24 +216,24 @@ export function dice_helper() {
 }
 
 function is_roll(message_data) {
-    if (game.user.isGM && message_data["rolls"].length > 0) {
-        if (message_data["flavor"] === undefined) {
-            return false;
-        }
-        return true;
-        if (
-            message_data.message.content.search("Initiative") === -1 ||
-            message_data.message.content.search(
-                game.i18n.localize("ffg-star-wars-enhancements.dice-helper-button-text")
-            ) === -1 ||
-            message_data.message.content.search(
-                game.i18n.localize("ffg-star-wars-enhancements.dice-helper-message-content-3")
-            ) === -1
-        ) {
-            return true;
-        }
+    if (!game.user.isGM || !(message_data["rolls"]?.length > 0)) {
+        return false;
     }
-    return false;
+    const flavor = message_data["flavor"];
+    if (flavor === undefined) {
+        return false;
+    }
+    // Initiative is not a check anyone spends advantage on, and the helper must not
+    // offer to help with its own output. Both the flavour and the content are
+    // searched: a createChatMessage payload carries no `message` property, which is
+    // why the original test never ran.
+    const haystack = `${flavor} ${message_data["content"] ?? ""}`;
+    const excluded = [
+        "Initiative",
+        game.i18n.localize("ffg-star-wars-enhancements.dice-helper-button-text"),
+        game.i18n.localize("ffg-star-wars-enhancements.dice-helper-message-content-3"),
+    ];
+    return !excluded.some((needle) => needle && haystack.includes(needle));
 }
 
 async function dice_helper_clicked(object) {
@@ -412,6 +412,14 @@ function is_supported_skill(skill, data) {
     return result;
 }
 
+function journal_pages_of(journal) {
+    const pages = journal?.pages;
+    if (!pages) return [];
+    if (Array.isArray(pages)) return pages;
+    if (Array.isArray(pages.contents)) return pages.contents;
+    return [];
+}
+
 export function load_data() {
     /**
      * Load dice helper data from the Journal
@@ -450,7 +458,7 @@ export function load_data() {
 
     // importing a journal creates a new document rather than replacing an existing one, so several
     // entries can share the same name. Prefer one that actually holds pages over whichever sorts first.
-    let journal = candidates.find((candidate) => candidate.pages.contents.length > 0);
+    let journal = candidates.find((candidate) => journal_pages_of(candidate).length > 0);
     if (candidates.length > 1) {
         log(
             feature_name,
@@ -470,7 +478,7 @@ export function load_data() {
     }
     log(feature_name, "Found journal " + journal_name);
 
-    let journal_pages = journal.pages.contents;
+    let journal_pages = journal_pages_of(journal);
 
     let jsondata = {};
     for (let page of journal_pages) {
@@ -479,7 +487,11 @@ export function load_data() {
         }
         try {
             let data = page.text.content.replace(/<\/?p>/g, "");
-            let pageData = JSON.parse(data.replace(/\u201c|\u201d/g, '"'));
+            // Saving the page in Foundry's editor escapes quotes and may use curly quotes.
+            // Decode &amp; last so an escaped entity is not decoded twice.
+            let pageData = JSON.parse(
+                data.replace(/\u201c|\u201d/g, '"').replaceAll("&quot;", '"').replaceAll("&amp;", "&")
+            );
             // merge page data into combined result, expanding comma-separated keys
             Object.keys(pageData).forEach((key) => {
                 let keys = key.split(",").map((k) => k.trim());

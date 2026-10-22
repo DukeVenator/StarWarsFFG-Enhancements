@@ -58,7 +58,7 @@ export function hooks() {
     // to jQuery so the .find()/.append()/.on() calls below keep working.
     Hooks.on("renderChatMessageHTML", async (message, html, messageData) => {
         if (!game.settings.get(MODULE_ID, SETTING_ENABLE)) return;
-        html = html instanceof HTMLElement ? $(html) : html;
+        html = typeof HTMLElement !== "undefined" && html instanceof HTMLElement ? $(html) : html;
         // Prevent processing the same rendered element twice.
         if (html.find(".special-ammo-chat").length > 0) return;
 
@@ -89,7 +89,7 @@ export function hooks() {
     for (const cls of ["renderCodexActorSheet", "renderCodexAdversarySheet"]) {
         Hooks.on(cls, async (app, element, context, options) => {
             if (!game.settings.get(MODULE_ID, SETTING_ENABLE)) return;
-            const root = element instanceof HTMLElement ? element : element?.[0];
+            const root = typeof HTMLElement !== "undefined" && element instanceof HTMLElement ? element : element?.[0];
             if (!root) return;
             try {
                 await _injectCodexSpecialAmmo(app.document ?? app.actor, root);
