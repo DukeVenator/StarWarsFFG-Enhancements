@@ -1,6 +1,13 @@
 import { log_msg as log } from "./util.js";
 
 let feature_name = "dice_helper";
+let _cachedData = null;
+let _cacheJournalName = null;
+
+export function invalidate_cache() {
+    _cachedData = null;
+    _cacheJournalName = null;
+}
 
 export function init() {
     log(feature_name, "Initializing");
@@ -19,6 +26,9 @@ export function init() {
         config: true,
         type: String,
         default: "dice_helper",
+        // the cache is keyed on the journal name, so pointing the setting at a different journal
+        // (or back at a previous one) has to drop it rather than rely on the key matching
+        onChange: () => invalidate_cache(),
     });
     log(feature_name, "Initialized");
 }
@@ -35,22 +45,43 @@ async function socket_listener(data) {
 }
 
 export function dice_helper() {
-    log(feature_name, "[FFG Dice Helper] dice_helper() registering socket and click handlers");
     game.socket.on("module.ffg-star-wars-enhancements", socket_listener);
-    
+
+    // Invalidate cached data only when the configured dice helper journal is modified
+    const invalidateIfDiceHelperJournal = (document, changes) => {
+        if (!_cachedData) {
+            return;
+        }
+        // a rename can move a journal in or out of the configured name, and the document already
+        // carries the new name by the time we see it, so drop the cache for any rename at all
+        if (changes && "name" in changes) {
+            invalidate_cache();
+            return;
+        }
+        // page hooks pass the page (its entry is the parent), entry hooks pass the entry itself
+        if (document?.parent?.name === _cacheJournalName || document?.name === _cacheJournalName) {
+            invalidate_cache();
+        }
+    };
+    Hooks.on("updateJournalEntryPage", invalidateIfDiceHelperJournal);
+    Hooks.on("createJournalEntryPage", invalidateIfDiceHelperJournal);
+    Hooks.on("deleteJournalEntryPage", invalidateIfDiceHelperJournal);
+    // pages created as part of their parent entry (i.e. an import) do not fire the page hooks above,
+    // and a new or deleted entry changes which journal the name resolves to
+    Hooks.on("createJournalEntry", invalidateIfDiceHelperJournal);
+    Hooks.on("updateJournalEntry", invalidateIfDiceHelperJournal);
+    Hooks.on("deleteJournalEntry", invalidateIfDiceHelperJournal);
+
     // Use document-level event delegation for button clicks (works after page refresh)
     $(document).off("click", ".effg-die-result"); // Remove any existing handlers
     $(document).on("click", ".effg-die-result", async function (event) {
-        log(feature_name, "[FFG Dice Helper] Document-level click on .effg-die-result", { target: event.target, currentTarget: event.currentTarget });
         event.preventDefault();
         event.stopPropagation();
         
         // Find the message element that contains this button
         let messageElement = $(this).closest(".message");
-        log(feature_name, "[FFG Dice Helper] messageElement from .closest('.message')", { length: messageElement.length, element: messageElement[0] });
         
         if (messageElement.length === 0) {
-            console.warn("[FFG Dice Helper] No .message ancestor found for button; click may be on detached or wrong DOM.");
             return;
         }
         
@@ -63,19 +94,14 @@ export function dice_helper() {
                 messageId = messageIdAttr.replace("chat-message-", "");
             }
         }
-        log(feature_name, "[FFG Dice Helper] messageId", { messageId, messageElementId: messageElement.attr("id"), dataMessageId: messageElement.attr("data-message-id") });
         
         if (!messageId) {
-            console.warn("[FFG Dice Helper] Could not resolve messageId from message element.");
             return;
         }
         
         // Get the message document
         let msg = game.messages.get(messageId);
-        log(feature_name, "[FFG Dice Helper] game.messages.get(messageId)", { messageId, msg: !!msg });
-        
         if (!msg) {
-            console.warn("[FFG Dice Helper] No message in game.messages for id:", messageId);
             return;
         }
         
@@ -84,12 +110,10 @@ export function dice_helper() {
             message: msg,
             _id: msg.id ?? msg._id
         };
-        log(feature_name, "[FFG Dice Helper] Calling dice_helper_clicked from document handler");
         await dice_helper_clicked(wrapper);
     });
     
     Hooks.on("createChatMessage", (messageData, meta_data, id) => {
-        log(feature_name, "[FFG Dice Helper] createChatMessage fired", { id, hasFlavor: !!messageData?.flavor, hasRolls: !!(messageData?.rolls?.length) });
         if (game.settings.get("ffg-star-wars-enhancements", "dice-helper")) {
             if (is_roll(messageData) === true) {
                 // as of some v10 version, chat messages can contain >1 roll. let's just read the first
@@ -154,7 +178,6 @@ export function dice_helper() {
                             "!</button>",
                     };
                     log(feature_name, "New message content: " + msg["content"]);
-                    log(feature_name, "[FFG Dice Helper] Sending helper button message via ChatMessage.create", { contentLength: msg.content?.length });
                     ChatMessage.create(msg);
                 }
             } else {
@@ -179,18 +202,13 @@ export function dice_helper() {
             
             // this would need to remain in renderchatmessage since we don't have easy access to the HTML later
             html.on("click", ".effg-die-result", async function (event) {
-                // v13: messageData may have id (not _id) or nested message._id
                 const resolvedId = messageData?.id ?? messageData?._id ?? messageData?.message?._id;
-                log(feature_name, "[FFG Dice Helper] renderChatMessage handler: click on .effg-die-result", { messageDataId: messageData?.id, messageData_id: messageData?._id, message_message_id: messageData?.message?._id, resolvedId });
                 event.preventDefault();
                 event.stopPropagation();
-                
-                // messageData is the ChatMessage document; wrap with normalized id for v13
                 let wrapper = {
                     message: messageData,
                     _id: resolvedId
                 };
-                log(feature_name, "[FFG Dice Helper] Calling dice_helper_clicked from renderChatMessage handler");
                 await dice_helper_clicked(wrapper);
             });
         }
@@ -224,7 +242,6 @@ async function dice_helper_clicked(object) {
      *
      * @param {object} ChatMessage object passed in by the hook we're listened to
      */
-    log(feature_name, "[FFG Dice Helper] dice_helper_clicked called", { hasObject: !!object, objectKeys: object ? Object.keys(object) : [] });
     log(feature_name, "Detected button click; converting to results");
 
     if (!game.user.isGM) {
@@ -238,7 +255,7 @@ async function dice_helper_clicked(object) {
     
     // Try to determine the correct content path (v13: nested message.message.content)
     let content = null;
-    
+
     if (object?.message?.message?.content) {
         content = object.message.message.content;
     } else if (object?.message?.content) {
@@ -255,10 +272,8 @@ async function dice_helper_clicked(object) {
             content = objData.content;
         }
     }
-    log(feature_name, "[FFG Dice Helper] dice_helper_clicked content resolution", { hasContent: !!content, contentLength: content?.length });
-    
+
     if (!content) {
-        console.warn("[FFG Dice Helper] dice_helper_clicked: no content found on object", object);
         return;
     }
     
@@ -266,30 +281,25 @@ async function dice_helper_clicked(object) {
     log(feature_name, JSON.stringify(data));
 
     let skill = data["skill"];
-    let suggestions = await fetch_suggestions(data);
+    let result = await fetch_suggestions(data);
 
-    // Get the actual ChatMessage document from the collection
     // v13: document id can be .id or ._id; wrapper may have message.message._id
     let msg = null;
-    let messageId = null;
-    
-    messageId = object?.message?.id ?? object?.message?._id ?? object?.message?.message?._id ?? object?._id ?? object?.id;
+    let messageId = object?.message?.id ?? object?.message?._id ?? object?.message?.message?._id ?? object?._id ?? object?.id;
     if (messageId) {
         msg = game.messages.get(messageId);
     }
     if (!messageId) {
-        console.warn("[FFG Dice Helper] dice_helper_clicked: could not get messageId from object", object);
         return;
     }
-    log(feature_name, "[FFG Dice Helper] dice_helper_clicked message lookup", { messageId, foundMsg: !!msg });
-    
+
     if (!msg) {
-        console.warn("[FFG Dice Helper] dice_helper_clicked: game.messages.get returned null for", messageId);
         return;
     }
-    
+
     let context = {
-        suggestions: suggestions,
+        suggestions: result.suggestions,
+        contextGroups: result.contextGroups,
         skill: skill,
     };
     let newContent = (await getTemplate("modules/ffg-star-wars-enhancements/templates/dice_helper.html"))(
@@ -329,13 +339,18 @@ async function fetch_suggestions(results) {
     if (!is_supported_skill(skill, data)) {
         // we don't have any suggestions for this skill
         log(feature_name, "Not rendering suggestion; unable to find " + skill + " in " + JSON.stringify(data));
-        return [];
+        return { suggestions: [], contextGroups: [] };
     }
 
     // build out an array of the suggestions
     let suggestions = [];
+    let contextGroupMap = {};
+    let contextGroupOrder = [];
     for (var x = 0; x < suggestion_categories.length; x++) {
         let category = suggestion_categories[x];
+        if (!data[skill][category] || !Array.isArray(data[skill][category])) {
+            continue;
+        }
         // build an array of the suggestions for the specific category we're looking at now
         if ((category === "ad" && results["tr"] > 0) || (category === "th" && results["de"] > 0)) {
             var tmp_suggestions = data[skill][category];
@@ -344,15 +359,32 @@ async function fetch_suggestions(results) {
                 (suggestion) => suggestion.required <= results[category]
             );
         }
-        // only add the array if it's been populated
-        if (tmp_suggestions.length > 0) {
+
+        // separate context vs non-context entries
+        let nonContextSuggestions = tmp_suggestions.filter((s) => !s.context).sort((a, b) => a.required - b.required);
+        let contextSuggestions = tmp_suggestions.filter((s) => s.context);
+
+        // collect context entries across all categories, grouped by context name
+        for (let s of contextSuggestions) {
+            if (!contextGroupMap[s.context]) {
+                contextGroupMap[s.context] = [];
+                contextGroupOrder.push(s.context);
+            }
+            contextGroupMap[s.context].push({ text: s.text, required: s.required, category: category });
+        }
+
+        if (nonContextSuggestions.length > 0) {
             suggestions.push({
                 category: category,
-                suggestions: tmp_suggestions,
+                suggestions: nonContextSuggestions,
             });
         }
     }
-    return suggestions;
+
+    // build combined context groups
+    let contextGroups = contextGroupOrder.map((name) => ({ name: name, entries: contextGroupMap[name] }));
+
+    return { suggestions, contextGroups };
 }
 
 function is_supported_skill(skill, data) {
@@ -380,7 +412,7 @@ function is_supported_skill(skill, data) {
     return result;
 }
 
-function load_data() {
+export function load_data() {
     /**
      * Load dice helper data from the Journal
      * Returns a dict in the format of:
@@ -399,39 +431,125 @@ function load_data() {
      *  }
      */
     let journal_name = game.settings.get("ffg-star-wars-enhancements", "dice-helper-data");
-    let journal = game.journal.filter((journal) => journal.name === journal_name);
 
-    if (journal.length <= 0) {
-        ui.notifications.warn("Failed to find journal - make sure it's created or something");
+    // return cached data if available
+    if (_cachedData && _cacheJournalName === journal_name) {
+        log(feature_name, "Returning cached data for " + journal_name);
+        return _cachedData;
+    }
+
+    let candidates = game.journal.filter((journal) => journal.name === journal_name);
+
+    if (candidates.length <= 0) {
+        ui.notifications.warn(
+            `Dice helper: no journal named "${journal_name}" exists. Check the "dice helper data" module setting.`
+        );
         log(feature_name, "Unable to find journal with the name " + journal_name);
+        return {};
+    }
+
+    // importing a journal creates a new document rather than replacing an existing one, so several
+    // entries can share the same name. Prefer one that actually holds pages over whichever sorts first.
+    let journal = candidates.find((candidate) => candidate.pages.contents.length > 0);
+    if (candidates.length > 1) {
+        log(
+            feature_name,
+            `Found ${candidates.length} journals named ${journal_name}; using the first one that has pages`
+        );
+        ui.notifications.warn(
+            `Dice helper: ${candidates.length} journals are named "${journal_name}". Delete the duplicates to avoid ambiguity.`
+        );
+    }
+
+    if (journal === undefined) {
+        ui.notifications.warn(
+            `Dice helper: the journal "${journal_name}" has no pages. Delete it and reload to have it recreated.`
+        );
+        log(feature_name, "Unable to find journal with correct pages");
         return {};
     }
     log(feature_name, "Found journal " + journal_name);
 
-    let journal_pages = journal[0].pages.filter((i) => i.name === "dice_helper");
-    if (journal_pages.length <= 0) {
-        ui.notifications.warn("Failed to find journal with correct pages - make sure it's created or something");
-        log(feature_name, "Unable to find journal with correct pages");
+    let journal_pages = journal.pages.contents;
+
+    let jsondata = {};
+    for (let page of journal_pages) {
+        if (!page.text || !page.text.content) {
+            continue;
+        }
+        try {
+            let data = page.text.content.replace(/<\/?p>/g, "");
+            let pageData = JSON.parse(data.replace(/\u201c|\u201d/g, '"'));
+            // merge page data into combined result, expanding comma-separated keys
+            Object.keys(pageData).forEach((key) => {
+                let keys = key.split(",").map((k) => k.trim());
+                for (let k of keys) {
+                    if (jsondata[k]) {
+                        // merge arrays for each category
+                        for (let cat of ["su", "ad", "tr", "fa", "th", "de"]) {
+                            if (pageData[key][cat]) {
+                                if (!jsondata[k][cat]) {
+                                    jsondata[k][cat] = [];
+                                }
+                                jsondata[k][cat] = jsondata[k][cat].concat(pageData[key][cat]);
+                            }
+                        }
+                    } else {
+                        jsondata[k] = JSON.parse(JSON.stringify(pageData[key]));
+                    }
+                }
+            });
+            log(feature_name, "Loaded data from page: " + page.name);
+        } catch (err) {
+            log(feature_name, "Skipping page '" + page.name + "': not valid dice helper JSON");
+        }
+    }
+
+    if (Object.keys(jsondata).length === 0) {
+        ui.notifications.warn("Dice helper: no valid data found in any journal page");
         return {};
     }
 
-    try {
-        let data = journal_pages[0].text.content.replace("<p>", "").replace("</p>", "");
-        let jsondata = JSON.parse(data.replace('"', '"'));
-        // Let translate the skill names if possible
-        Object.keys(jsondata).forEach((skillname) => {
-            if (skillname.includes("SWFFG.")) {
-                let localized = game.i18n.localize(skillname);
-                let localizedskill = localized.toLowerCase().replace(/\s+/g, " ").trim();
-                Object.defineProperty(jsondata, localizedskill, Object.getOwnPropertyDescriptor(jsondata, skillname));
-                delete jsondata[skillname];
-            }
-        });
-        return jsondata;
-    } catch (err) {
-        ui.notifications.warn("Dice helper: invalid data detected in journal");
-        return {};
-    }
+    // Translate skill names if possible
+    Object.keys(jsondata).forEach((skillname) => {
+        if (skillname.includes("SWFFG.")) {
+            let localized = game.i18n.localize(skillname);
+            let localizedskill = localized.toLowerCase().replace(/\s+/g, " ").trim();
+            Object.defineProperty(jsondata, localizedskill, Object.getOwnPropertyDescriptor(jsondata, skillname));
+            delete jsondata[skillname];
+        }
+    });
+
+    _cachedData = jsondata;
+    _cacheJournalName = journal_name;
+    log(feature_name, "Cached data for " + journal_name);
+    return jsondata;
+}
+
+async function default_page_data() {
+    /**
+     * Build the page holding the shipped dice helper suggestions, translated where we have a translation
+     */
+    // let's search for a translated one (will probably show an error in console, can't avoid it)
+    let jsonFilePath = "modules/ffg-star-wars-enhancements/content/dice_helper_" + game.i18n.lang + ".json";
+    let logFileStatus = "translated";
+    await fetch(jsonFilePath).then((response) => {
+        if (!response.ok) {
+            logFileStatus = "default";
+            jsonFilePath = "modules/ffg-star-wars-enhancements/content/dice_helper.json";
+        }
+    });
+
+    log(feature_name, `using ${logFileStatus} dice helper content`);
+    let suggestions = await $.getJSON(jsonFilePath);
+    return {
+        name: "dice_helper",
+        type: "text",
+        text: {
+            content: JSON.stringify(suggestions),
+            format: CONST.JOURNAL_ENTRY_PAGE_FORMATS.HTML,
+        },
+    };
 }
 
 export async function create_and_populate_journal() {
@@ -441,42 +559,36 @@ export async function create_and_populate_journal() {
         return;
     }
 
+    // only the GM may create world documents, and we only need one client to do this
+    if (!game.user.isGM) {
+        return;
+    }
+
     // otherwise check to see if the journal already exists
     let journal_name = game.settings.get("ffg-star-wars-enhancements", "dice-helper-data");
-    let journal = game.journal.filter((journal) => journal.name === journal_name);
+    let candidates = game.journal.filter((journal) => journal.name === journal_name);
 
-    if (journal.length === 0) {
-        // journal doesn't exist
-
-        // let's search for a translated one (will probably show an error in console, can't avoid it)
-        let jsonFilePath = "modules/ffg-star-wars-enhancements/content/dice_helper_" + game.i18n.lang + ".json";
-        let logFileStatus = "translated";
-        await fetch(jsonFilePath).then((response) => {
-            if (!response.ok) {
-                logFileStatus = "default";
-                jsonFilePath = "modules/ffg-star-wars-enhancements/content/dice_helper.json";
-            }
-        });
-
-        // then create journal
-        log(feature_name, `creating ${logFileStatus} journal`);
-        let suggestions = await $.getJSON(jsonFilePath);
-        let data = {
-            name: journal_name,
-            pages: [
-                {
-                    name: "dice_helper",
-                    type: "text",
-                    text: {
-                        content: JSON.stringify(suggestions),
-                        format: CONST.JOURNAL_ENTRY_PAGE_FORMATS.HTML,
-                    },
-                },
-            ],
-            ownership: {
-                default: CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER,
-            },
-        };
-        JournalEntry.create(data);
+    // an entry with no pages holds no data, so it is no more usable than a missing one
+    if (candidates.some((candidate) => candidate.pages.contents.length > 0)) {
+        return;
     }
+
+    let page = await default_page_data();
+
+    if (candidates.length > 0) {
+        // the journal exists but is empty - repair it rather than leaving the feature silently broken
+        log(feature_name, "journal exists but has no pages, adding the default page");
+        await candidates[0].createEmbeddedDocuments("JournalEntryPage", [page]);
+        return;
+    }
+
+    // then create journal
+    log(feature_name, "creating journal");
+    await JournalEntry.create({
+        name: journal_name,
+        pages: [page],
+        ownership: {
+            default: CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER,
+        },
+    });
 }

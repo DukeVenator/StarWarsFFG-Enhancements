@@ -11,6 +11,10 @@
 - Manifest: both system ids declared, misspelled compatibility keys fixed, and dependency versions raised. Module url, manifest, and download stay on this fork.
 - Opening Crawl: a playlist can be chosen in the Opening Crawl settings. It plays through Foundry's playlist sync, alongside or instead of the music file, and stops when the crawl closes unless that switch is turned off.
 - Opening Crawl settings: choice fields render again on Foundry 13+ (the removed `select` helper was still used), and the music delay hint now says seconds.
+- Special ammo works on Codex II weapon and gear sheets. A loaded special magazine is what the weapon spends, and the weapon's own ammo counter is left alone while that magazine is loaded.
+- Attack animations accept a wildcard file path, and animation settings can be exported and imported.
+- Talents on the Codex II sheet have an Associated Skills tab.
+- Dice helper journal lookup uses the first journal of that name that actually has pages, repairs an empty journal, drops its cache when the journal changes, and only the GM creates the journal. Spending suggestions are sorted by how many results they require, and contextual suggestions are grouped.
 
 `3.0.0` - 2026-03-28
 - Improvement: [Talent Reminders!](https://github.com/wrycu/StarWarsFFG-Enhancements/pull/232)

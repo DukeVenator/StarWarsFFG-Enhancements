@@ -11,4 +11,18 @@
         </div>
     {{/each}}
 {{/each}}
+{{#each this.contextGroups}}
+    <details class="dice-helper-context">
+        <summary>{{this.name}}</summary>
+        <div class="dice-helper-context-content">
+            {{#each this.entries}}
+                <div class="dice-helper-suggestion">
+                    {{#times this.required}}[{{this.category}}]{{/times}}
+                    :&nbsp;
+                    {{this.text}}
+                </div>
+            {{/each}}
+        </div>
+    </details>
+{{/each}}
 </span>
