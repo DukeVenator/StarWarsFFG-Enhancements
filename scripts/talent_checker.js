@@ -180,22 +180,43 @@ function get_ranks(actor) {
 }
 
 export async function update_status(token, ranks, icon_path) {
-    let active = ranks !== 0;
-    if (!window.EffectCounter) {
-        // the user doesn't have status icon counters installed; they don't get a count
-        log(module_name, "Adding status to token");
-        token.toggleEffect(icon_path, { active: active });
-    } else {
-        log(module_name, "Adding status rank " + ranks + " to token");
-        // no need to search for the effect ourselves, as this is done in the underlying libraries
-        let new_counter = new ActiveEffectCounter(ranks, icon_path, token.document);
-        // render it
-        if (active) {
-            await new_counter.update();
-        } else {
-            // setValue() with a value of 0 clears the effect while update() does not
-            await new_counter.setValue(0);
+    // Foundry 14: Token#toggleEffect is gone and statuses live on the actor as ActiveEffects; Status
+    // Icon Counters 3 no longer creates counters from a bare icon path, it counts an existing effect.
+    const actor = token?.actor ?? token?.document?.actor;
+    if (!actor || !icon_path) return;
+    const active = ranks !== 0;
+    const status = CONFIG.statusEffects.find((s) => (s.img ?? s.icon) === icon_path);
+    const statusId = status?.id ?? "ffg-sw-enhanced-" + icon_path.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+    const findEffect = () =>
+        actor.effects.find((e) => e.statuses?.has(statusId)) ??
+        actor.effects.find((e) => e.img === icon_path && !e.getFlag("core", "overlay"));
+    let effect = findEffect();
+    if (!active) {
+        if (effect) {
+            log(module_name, "Removing status from " + actor.name);
+            await effect.delete();
         }
+        return;
+    }
+    const counters = game.modules.get("statuscounter")?.active ? game.modules.get("statuscounter").api : null;
+    if (!effect) {
+        log(module_name, "Adding status rank " + ranks + " to " + actor.name);
+        // let Status Icon Counters seed the count when it sees the effect being created
+        counters?.queueCreation?.(token, statusId, ranks);
+        if (status) {
+            await actor.toggleStatusEffect(statusId, { active: true, overlay: false });
+        } else {
+            await actor.createEmbeddedDocuments("ActiveEffect", [
+                { name: icon_path.split("/").pop().replace(/\.[a-z0-9]+$/i, ""), img: icon_path, statuses: [statusId] },
+            ]);
+        }
+        effect = findEffect();
+    }
+    // Status Icon Counters 3 attaches a counter to every icon-bearing effect
+    const counter = effect?.statusCounter;
+    if (counter && counter._sourceValue !== ranks) {
+        log(module_name, "Setting status count " + ranks + " on " + actor.name);
+        await counter.setValue(ranks);
     }
 }
 
@@ -204,7 +225,7 @@ class talent_checker_UISettings extends FormApplication {
     static get defaultOptions() {
         return foundry.utils.mergeObject(super.defaultOptions, {
             id: "talent-checker",
-            classes: ["starwarsffg", "data-import"],
+            classes: [game.system.id, "data-import"],
             title: `${game.i18n.localize("ffg-star-wars-enhancements.talent-checker.title")}`,
             template: "modules/ffg-star-wars-enhancements/templates/settings.html",
         });

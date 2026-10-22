@@ -1,5 +1,5 @@
 export function log_msg(feature, message) {
-    if (game.settings.get("starwarsffg", "enableDebug")) {
+    if (game.settings.get(game.system.id, "enableDebug")) {
         console.log("ffg-star-wars-enhancements | " + feature + " | " + message);
     }
 }

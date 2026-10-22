@@ -67,7 +67,7 @@ class Shop {
                 types: ["weapon", "itemattachment"],
             },
             nerf_herder: {
-                compendiums: ["starwarsffg.oggdudegear"],
+                compendiums: ["world.oggdudegear"],
                 types: ["gear"],
             },
         };

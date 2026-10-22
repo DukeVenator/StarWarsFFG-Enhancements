@@ -43,7 +43,8 @@ export function hooks() {
         }
     });
 
-    Hooks.on("renderChatMessage", async (message, html, messageData) => {
+    Hooks.on("renderChatMessageHTML", async (message, element, messageData) => {
+        const html = $(element);
         if (!game.settings.get(MODULE_ID, SETTING_ENABLE)) return;
         if (!message.rolls || message.rolls.length === 0) return;
         // Prevent processing the same message twice
@@ -403,7 +404,7 @@ async function _injectGearQualities(gear, html) {
         if (!clickedObject) {
             clickedObject = parentObject.system[clickedType].find(i => i.name === li.data("upgrade-name"));
         }
-        const { itemEditor } = await import("../../../../systems/starwarsffg/modules/items/item-editor.js"); // TODO: if item-editor can be exported, we could've used less fragile import method, but should work so far
+        const { itemEditor } = await import(`/systems/${game.system.id}/modules/items/item-editor.js`); // TODO: if item-editor can be exported, we could've used less fragile import method, but should work so far
         const typeChoices = {};
         for (const key of Object.keys(CONFIG.FFG.itemmodifier_types)) {
             const entry = CONFIG.FFG.itemmodifier_types[key];

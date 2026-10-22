@@ -52,6 +52,24 @@ export function init() {
         type: Number,
         default: 0.0,
     });
+    game.settings.register("ffg-star-wars-enhancements", "opening-crawl-playlist", {
+        module: "ffg-star-wars-enhancements",
+        name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-playlist"),
+        hint: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-playlist-hint"),
+        scope: "world",
+        config: false,
+        type: String,
+        default: "",
+    });
+    game.settings.register("ffg-star-wars-enhancements", "opening-crawl-playlist-stop", {
+        module: "ffg-star-wars-enhancements",
+        name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-playlist-stop"),
+        hint: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-playlist-stop-hint"),
+        scope: "world",
+        config: false,
+        type: Boolean,
+        default: true,
+    });
     game.settings.register("ffg-star-wars-enhancements", "opening-crawl-image-right", {
         module: "ffg-star-wars-enhancements",
         name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-image-right"),
@@ -277,6 +295,31 @@ class OpeningCrawlApplication extends HandlebarsApplicationMixin(ApplicationV2) 
     }
 
     /**
+     * Start the configured playlist after the music delay. Only the client that launched the
+     * crawl does this: a playlist is a world document, and Foundry's own playlist sync then
+     * plays it on every connected client, so no socket traffic is needed.
+     */
+    async start_playlist() {
+        const playlist = game.playlists.get(this.data.playlist);
+        if (!playlist) {
+            log("opening-crawl", "configured playlist not found: " + this.data.playlist);
+            ui.notifications.warn(game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.playlist-missing"));
+            return;
+        }
+        if (!playlist.canUserModify(game.user, "update")) {
+            log("opening-crawl", "user may not control the playlist " + playlist.name);
+            return;
+        }
+        const delay = game.settings.get("ffg-star-wars-enhancements", "opening-crawl-music-delay") * 1000;
+        await sleep(delay);
+        // the crawl may have been closed during the delay
+        if (this.closing) return;
+        this.playlist = playlist;
+        await playlist.playAll();
+        log("opening-crawl", "playlist started: " + playlist.name);
+    }
+
+    /**
      * Listener that times the audio playing the audio with the opening crawl.
      * @param {object} context the rendered context
      * @param {object} options render options
@@ -290,12 +333,24 @@ class OpeningCrawlApplication extends HandlebarsApplicationMixin(ApplicationV2) 
             // Sound is already preloaded, start playing it
             this.play_music();
         }
+        // When a playlist is configured, the launching client starts it for everyone
+        if (this.data.playlist && this.data.launcher === game.user.id) {
+            this.start_playlist();
+        }
     }
 
     close(options) {
+        this.closing = true;
         if (this.sound) {
             this.sound.stop();
             this.sound = null;
+        }
+        if (this.playlist) {
+            if (game.settings.get("ffg-star-wars-enhancements", "opening-crawl-playlist-stop")) {
+                this.playlist.stopAll();
+                log("opening-crawl", "playlist stopped: " + this.playlist.name);
+            }
+            this.playlist = null;
         }
         return super.close(options);
     }
@@ -375,10 +430,18 @@ export function launch_opening_crawl(data) {
         log("opening-crawl", "no music configured");
     }
 
+    const playlist = game.settings.get("ffg-star-wars-enhancements", "opening-crawl-playlist") || null;
+    if (!playlist) {
+        log("opening-crawl", "no playlist configured");
+    }
+
     data = foundry.utils.mergeObject(data, {
         type: "opening-crawl",
         logo: game.settings.get("ffg-star-wars-enhancements", "opening-crawl-logo"),
         music: music,
+        playlist: playlist,
+        // only the launching client starts and stops the playlist
+        launcher: game.user.id,
     });
     
     game.socket.emit("module.ffg-star-wars-enhancements", data);
@@ -575,7 +638,7 @@ class opening_crawl_UISettings extends FormApplication {
     static get defaultOptions() {
         return foundry.utils.mergeObject(super.defaultOptions, {
             id: "data-importer",
-            classes: ["starwarsffg", "data-import"],
+            classes: [game.system.id, "data-import"],
             title: `${game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.ui.name")}`,
             template: "modules/ffg-star-wars-enhancements/templates/settings.html",
         });
@@ -606,6 +669,13 @@ class opening_crawl_UISettings extends FormApplication {
             s.isSelect = s.choices !== undefined;
             s.isRange = setting.type === Number && s.range;
             s.isFilePicker = setting.valueType === "FilePicker";
+            if (s.key === "opening-crawl-playlist") {
+                s.isSelect = true;
+                s.choices = {
+                    "": game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.playlist-none"),
+                    ...Object.fromEntries(game.playlists.contents.map((p) => [p.id, p.name])),
+                };
+            }
 
             // Classify setting
             const name = s.module;

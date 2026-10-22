@@ -94,6 +94,10 @@ export function dice_helper() {
             if (is_roll(messageData) === true) {
                 // as of some v10 version, chat messages can contain >1 roll. let's just read the first
                 messageData["_roll"] = messageData.rolls[0];
+                if (!messageData["_roll"]?.ffg) {
+                    log(feature_name, "Roll is not an FFG dice pool; ignoring");
+                    return;
+                }
                 let skill = messageData["flavor"]
                     .replace(game.i18n.localize("SWFFG.Rolling") + " ", "")
                     .replace("...", "")
@@ -121,7 +125,7 @@ export function dice_helper() {
                     }
 
                     var msg = {
-                        type: CONST.CHAT_MESSAGE_STYLES.OTHER,
+                        style: CONST.CHAT_MESSAGE_STYLES.OTHER,
                         content:
                             '<button class="effg-die-result" ' +
                             'data-ad="' +
@@ -159,7 +163,10 @@ export function dice_helper() {
         }
     });
 
-    Hooks.on("renderChatMessage", (app, html, messageData) => {
+    Hooks.on("renderChatMessageHTML", (message, element, context) => {
+        // Foundry 13+ hands an HTMLElement; wrap it so the jQuery handlers below stay as they are
+        const html = $(element);
+        const messageData = message;
         /*
         this is slightly less performant than doing the settings check outside of the hook, but if we do it above the
         hook and the user enables it after the game starts, it doesn't actually enable

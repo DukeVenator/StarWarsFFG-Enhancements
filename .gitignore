@@ -15,3 +15,4 @@ secrets.json
 docker-compose.override.yaml
 /.idea
 /packs
+module.zip

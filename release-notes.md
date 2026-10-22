@@ -1,4 +1,17 @@
 
+`Unreleased`
+
+- Foundry VTT 14 support (verified 14.368; still runs on 13).
+- Status Icon Counters 3: talent-checker and stimpack-sync statuses are toggled on the actor and counted through the effect counter.
+- Chat hooks moved to `renderChatMessageHTML`; the strain reminder uses `CHAT_MESSAGE_STYLES`.
+- The dice helper ignores rolls that are not FFG dice pools instead of throwing.
+- Dice helper suggestion messages use `style` instead of the legacy numeric `type`, which Foundry 12+ rejects.
+- Runs under any Star Wars FFG system id: the vendor sheet takes the system sheet from the registry, system helpers load by dynamic import, and settings, flags, paths, and CSS classes use the running id.
+- Vendor sheet registers at ready and no longer submits actor stats, so closing it does not throw.
+- Manifest: both system ids declared, misspelled compatibility keys fixed, and dependency versions raised. Module url, manifest, and download stay on this fork.
+- Opening Crawl: a playlist can be chosen in the Opening Crawl settings. It plays through Foundry's playlist sync, alongside or instead of the music file, and stops when the crawl closes unless that switch is turned off.
+- Opening Crawl settings: choice fields render again on Foundry 13+ (the removed `select` helper was still used), and the music delay hint now says seconds.
+
 `3.0.0` - 2026-03-28
 - Improvement: [Talent Reminders!](https://github.com/wrycu/StarWarsFFG-Enhancements/pull/232)
 - Improvement: [special ammo feature](https://github.com/wrycu/StarWarsFFG-Enhancements/wiki/Special-Ammo)

@@ -22,7 +22,7 @@ export function get_skill_options() {
 
     // Fallback: use the system's default skill list
     if (!skills) {
-        const theme = game.settings.get("starwarsffg", "skilltheme") || "starwars";
+        const theme = game.settings.get(game.system.id, "skilltheme") || "starwars";
         try {
             const defaultSkillList = game.ffg?.config?.defined_skill_list;
             if (defaultSkillList) {
@@ -113,7 +113,8 @@ export function talent_skill_association_hooks() {
         inject_skill_dropdown(item, html);
     });
 
-    Hooks.on("renderChatMessage", async (message, html, messageData) => {
+    Hooks.on("renderChatMessageHTML", async (message, element, messageData) => {
+        const html = $(element);
         // Inject talent pills into roll messages
         if (!game.settings.get("ffg-star-wars-enhancements", "talent-skill-association")) {
             return;

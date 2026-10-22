@@ -16,7 +16,7 @@ export function init() {
         scope: "world",
         config: true,
         type: String,
-        default: "systems/starwarsffg/images/dice/starwars/lightside.png",
+        default: `systems/${game.system.id}/images/dice/starwars/lightside.png`,
         filePicker: "Image",
     });
     game.settings.register("ffg-star-wars-enhancements", "auto-rename-actors_enemy", {
@@ -25,7 +25,7 @@ export function init() {
         scope: "world",
         config: true,
         type: String,
-        default: "systems/starwarsffg/images/dice/starwars/darkside.png",
+        default: `systems/${game.system.id}/images/dice/starwars/darkside.png`,
         filePicker: "Image",
     });
     game.settings.register("ffg-star-wars-enhancements", "auto-rename-actors_neutral", {
@@ -34,7 +34,7 @@ export function init() {
         scope: "world",
         config: true,
         type: String,
-        default: "systems/starwarsffg/images/dice/starwars/lightside.png",
+        default: `systems/${game.system.id}/images/dice/starwars/lightside.png`,
         filePicker: "Image",
     });
     log("attack_rename", "Initialized");

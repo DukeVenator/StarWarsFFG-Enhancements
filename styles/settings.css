@@ -1,10 +1,12 @@
-.starwarsffg .settings-list {
+.starwarsffg .settings-list,
+.starwarsffg_sandbox .settings-list {
     max-height: calc(100vh - 150px);
     overflow-y: auto;
     padding-right: 0.5em;
 }
 
-.starwarsffg.ffg-sw-enhanced.vendor .sheet-body {
+.starwarsffg.ffg-sw-enhanced.vendor .sheet-body,
+.starwarsffg_sandbox.ffg-sw-enhanced.vendor .sheet-body {
     height: calc(100% - 11rem) !important;
 }
 
