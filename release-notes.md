@@ -1,7 +1,7 @@
 
-`Unreleased`
+`4.0.0`
 
-- Foundry VTT 14 support (verified 14.368; still runs on 13).
+- Foundry VTT 14 is now required (verified 14.368). The 13-compatible line stays on `main`.
 - Status Icon Counters 3: talent-checker and stimpack-sync statuses are toggled on the actor and counted through the effect counter.
 - Chat hooks moved to `renderChatMessageHTML`; the strain reminder uses `CHAT_MESSAGE_STYLES`.
 - The dice helper ignores rolls that are not FFG dice pools instead of throwing.
