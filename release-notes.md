@@ -1,7 +1,9 @@
 
-`3.0.0` - ?
-
+`3.0.0` - 2026-03-28
+- Improvement: [Talent Reminders!](https://github.com/wrycu/StarWarsFFG-Enhancements/pull/232)
+- Improvement: [special ammo feature](https://github.com/wrycu/StarWarsFFG-Enhancements/wiki/Special-Ammo)
 - FIX: Dice helper now works with Foundry VTT v13 (thanks `DukeVenator`!)
+- Improvement: Ukrainian localization provided
   - Updated `createChatMessage` hook signature to match v13 API
   - Fixed Collection handling to use `game.messages.get()` for retrieving ChatMessage documents
   - Added guards against missing rolls and improved error handling
@@ -35,6 +37,7 @@
     - Add the ability to require the presence or absense of item tags when generating shop inventory
     - Add minimum and maximum price limits
     - Dice helper now provides suggestions for all skills, not just combat skills
+- Fix: Added TokenMagic as an optional dependency (it already was, but was not declared)
 
 `2.1.2` - 2025-06-15
 
