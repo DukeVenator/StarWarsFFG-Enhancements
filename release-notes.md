@@ -9,6 +9,7 @@
 - Runs under any Star Wars FFG system id: the vendor sheet takes the system sheet from the registry, system helpers load by dynamic import, and settings, flags, paths, and CSS classes use the running id.
 - Vendor sheet registers at ready and no longer submits actor stats, so closing it does not throw.
 - Manifest: both system ids declared, misspelled compatibility keys fixed, and dependency versions raised. Module url, manifest, and download stay on this fork.
+- Opening Crawl: the text scroll runs the full journal, instead of fading out at a fixed distance. The window close timer follows the same speed-adjusted length as the animation. Journal parsing no longer uses jQuery, and the crawl picker uses the journal id.
 - Opening Crawl: a playlist can be chosen in the Opening Crawl settings. It plays through Foundry's playlist sync, alongside or instead of the music file, and stops when the crawl closes unless that switch is turned off.
 - Opening Crawl settings: choice fields render again on Foundry 13+ (the removed `select` helper was still used), and the music delay hint now says seconds.
 - Special ammo works on Codex II weapon and gear sheets. A loaded special magazine is what the weapon spends, and the weapon's own ammo counter is left alone while that magazine is loaded.

@@ -385,15 +385,21 @@
 @-moz-keyframes titlesAnimation {
     0% {
         top: 100%;
+        transform: translateY(0);
         opacity: 1;
     }
 
     95% {
+        top: 5%;
+        transform: translateY(-95%);
         opacity: 1;
     }
 
     100% {
-        top: -18.1524%;
+        top: 0;
+        /* -100% is the text block's own height, so the last line clears the window.
+           A fixed percentage of the crawl window ended the scroll while longer text was still below it. */
+        transform: translateY(-100%);
         opacity: 0;
     }
 }
@@ -401,15 +407,21 @@
 @-webkit-keyframes titlesAnimation {
     0% {
         top: 100%;
+        transform: translateY(0);
         opacity: 1;
     }
 
     95% {
+        top: 5%;
+        transform: translateY(-95%);
         opacity: 1;
     }
 
     100% {
-        top: -18.1524%;
+        top: 0;
+        /* -100% is the text block's own height, so the last line clears the window.
+           A fixed percentage of the crawl window ended the scroll while longer text was still below it. */
+        transform: translateY(-100%);
         opacity: 0;
     }
 }
@@ -417,15 +429,21 @@
 @-o-keyframes titlesAnimation {
     0% {
         top: 100%;
+        transform: translateY(0);
         opacity: 1;
     }
 
     95% {
+        top: 5%;
+        transform: translateY(-95%);
         opacity: 1;
     }
 
     100% {
-        top: -18.1524%;
+        top: 0;
+        /* -100% is the text block's own height, so the last line clears the window.
+           A fixed percentage of the crawl window ended the scroll while longer text was still below it. */
+        transform: translateY(-100%);
         opacity: 0;
     }
 }
@@ -710,15 +728,21 @@
 @-moz-keyframes titlesAnimation {
     0% {
         top: 100%;
+        transform: translateY(0);
         opacity: 1;
     }
 
     95% {
+        top: 5%;
+        transform: translateY(-95%);
         opacity: 1;
     }
 
     100% {
-        top: -18.1524%;
+        top: 0;
+        /* -100% is the text block's own height, so the last line clears the window.
+           A fixed percentage of the crawl window ended the scroll while longer text was still below it. */
+        transform: translateY(-100%);
         opacity: 0;
     }
 }
@@ -726,15 +750,21 @@
 @-webkit-keyframes titlesAnimation {
     0% {
         top: 100%;
+        transform: translateY(0);
         opacity: 1;
     }
 
     95% {
+        top: 5%;
+        transform: translateY(-95%);
         opacity: 1;
     }
 
     100% {
-        top: -18.1524%;
+        top: 0;
+        /* -100% is the text block's own height, so the last line clears the window.
+           A fixed percentage of the crawl window ended the scroll while longer text was still below it. */
+        transform: translateY(-100%);
         opacity: 0;
     }
 }
@@ -742,15 +772,21 @@
 @-o-keyframes titlesAnimation {
     0% {
         top: 100%;
+        transform: translateY(0);
         opacity: 1;
     }
 
     95% {
+        top: 5%;
+        transform: translateY(-95%);
         opacity: 1;
     }
 
     100% {
-        top: -18.1524%;
+        top: 0;
+        /* -100% is the text block's own height, so the last line clears the window.
+           A fixed percentage of the crawl window ended the scroll while longer text was still below it. */
+        transform: translateY(-100%);
         opacity: 0;
     }
 }
@@ -758,15 +794,21 @@
 @keyframes titlesAnimation {
     0% {
         top: 100%;
+        transform: translateY(0);
         opacity: 1;
     }
 
     95% {
+        top: 5%;
+        transform: translateY(-95%);
         opacity: 1;
     }
 
     100% {
-        top: -18.1524%;
+        top: 0;
+        /* -100% is the text block's own height, so the last line clears the window.
+           A fixed percentage of the crawl window ended the scroll while longer text was still below it. */
+        transform: translateY(-100%);
         opacity: 0;
     }
 }

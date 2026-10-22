@@ -370,37 +370,45 @@ export function ready() {
  * @param {JournalEntry} journal
  * @returns {object|null}
  */
+function journal_pages(journal) {
+    const pages = journal?.pages;
+    if (!pages) return [];
+    if (Array.isArray(pages.contents)) return pages.contents;
+    if (typeof pages.values === "function") return Array.from(pages.values());
+    return [];
+}
+
 function parse_journal(journal) {
-    let journal_html = $("<div/>").append($(journal.pages.contents[0].text.content));
-
-    let episode_html = journal_html.find("h1");
-    let title_html = journal_html.find("h2");
-
-    if (episode_html.length == 0) {
+    const pages = journal_pages(journal).map((page) => page?.text?.content).filter(Boolean);
+    // The crawl page is the one with the episode heading. A journal can have other pages first.
+    const html = pages.find((page) => /<h1[\s>]/i.test(page)) ?? pages[0];
+    if (!html) {
         ui.notifications.warn(game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.missing-episode"));
         return null;
     }
-    if (title_html.length == 0) {
+
+    const journal_html = new DOMParser().parseFromString(String(html), "text/html");
+    const episode_html = journal_html.querySelector("h1");
+    const title_html = journal_html.querySelector("h2");
+
+    if (!episode_html) {
+        ui.notifications.warn(game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.missing-episode"));
+        return null;
+    }
+    if (!title_html) {
         ui.notifications.warn(game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.missing-title"));
         return null;
     }
 
-    var image = null;
-    let image_html = journal_html.find("img");
-    if (image_html.length) {
-        image = image_html.attr("src");
-        // Once the image has been extracted, remove it
-        journal_html.find("img").remove();
+    const image_html = journal_html.querySelector("img");
+    const image = image_html?.getAttribute("src") || null;
+    if (image_html) {
+        image_html.remove();
     } else {
         log("opening-crawl", "no image to pan to found in journal");
     }
 
-    let body = journal_html
-        .find("p")
-        .map(function () {
-            return $(this).text();
-        })
-        .toArray();
+    const body = Array.from(journal_html.querySelectorAll("p"), (paragraph) => paragraph.textContent.trim()).filter((text) => text.length > 0);
 
     if (body.length == 0) {
         ui.notifications.warn(game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.missing-body"));
@@ -408,8 +416,8 @@ function parse_journal(journal) {
     }
 
     return {
-        episode: episode_html.text(),
-        title: title_html.text(),
+        episode: episode_html.textContent.trim(),
+        title: title_html.textContent.trim(),
         body: body,
         image: image,
     };
@@ -471,10 +479,13 @@ async function socket_listener(data) {
             }
         }
         
-        let crawl = new OpeningCrawlApplication(data).render(true);
+        // ApplicationV2.render() returns a Promise, not the app. Holding the
+        // instance is what lets the timer close the window when the crawl ends.
+        const crawl = new OpeningCrawlApplication(data);
+        crawl.render(true);
         if (game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-close-delay") != 0) {
             await sleep(get_total_intro_duration() * 1000);
-            crawl.close();
+            if (!crawl.closing) crawl.close();
         }
     }
 }
@@ -501,7 +512,7 @@ class OpeningCrawlSelectApplication extends HandlebarsApplicationMixin(Applicati
         let folder = await get_journal_folder();
         let journals = folder.contents.map((journal) => {
             return {
-                id: journal._id,
+                id: journal.id ?? journal._id,
                 name: journal.name,
             };
         });
@@ -514,9 +525,8 @@ class OpeningCrawlSelectApplication extends HandlebarsApplicationMixin(Applicati
     _onRender(context, options) {
         super._onRender(context, options);
         
-        // Handle form submission - ApplicationV2 uses this.element which is a jQuery object or HTMLElement
-        const element = this.element instanceof jQuery ? this.element[0] : this.element;
-        const form = element?.querySelector("form");
+        const element = this.element?.jquery ? this.element[0] : this.element;
+        const form = element?.querySelector?.("form");
         if (form) {
             form.addEventListener("submit", this._onSubmit.bind(this));
         }
@@ -571,10 +581,12 @@ async function get_journal_folder() {
         let missing_folder = game.i18n.format("ffg-star-wars-enhancements.opening-crawl.create-folder", {
             folder: folder_name,
         });
-        let confirmation = await Dialog.confirm({
-            title: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.title"),
-            content: `<p>${missing_folder}</p>`,
-        });
+        const title = game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.title");
+        const content = `<p>${missing_folder}</p>`;
+        const confirm = foundry.applications?.api?.DialogV2?.confirm;
+        let confirmation = confirm
+            ? await confirm({ window: { title }, content, modal: true })
+            : await Dialog.confirm({ title, content });
         if (confirmation) {
             folder = await Folder.create({
                 name: folder_name,
@@ -610,16 +622,31 @@ export async function create_opening_crawl() {
     });
 }
 
+function opening_crawl_setting(key) {
+    const value = Number(game.settings.get("ffg-star-wars-enhancements", key));
+    return Number.isFinite(value) ? value : 0;
+}
+
+/**
+ * Matches the CSS crawl length: (duration + adjust) / speed.
+ * The close timer used to add the raw duration, so a speed below 1 closed the window while the text was still moving.
+ */
+function crawl_scroll_seconds() {
+    const duration = opening_crawl_setting("opening-crawl-intro-crawl-duration");
+    const adjust = opening_crawl_setting("opening-crawl-intro-crawl-duration-adjust");
+    const speed = Number(game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-crawl-speed"));
+    return (duration + adjust) / (speed > 0 ? speed : 1);
+}
+
 function get_total_intro_duration() {
     return (
-        game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-text-delay") +
-        game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-text-duration") +
-        game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-crawl-delay") +
-        game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-crawl-duration") +
-        game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-crawl-duration-adjust") +
-        game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-pan-delay") +
-        game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-pan-duration") +
-        game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-close-delay")
+        opening_crawl_setting("opening-crawl-intro-text-delay") +
+        opening_crawl_setting("opening-crawl-intro-text-duration") +
+        opening_crawl_setting("opening-crawl-intro-crawl-delay") +
+        crawl_scroll_seconds() +
+        opening_crawl_setting("opening-crawl-intro-pan-delay") +
+        opening_crawl_setting("opening-crawl-intro-pan-duration") +
+        opening_crawl_setting("opening-crawl-intro-close-delay")
     );
 }
 
@@ -660,7 +687,7 @@ class opening_crawl_UISettings extends FormApplication {
             if (!setting.key.includes("opening-crawl-") || (!canConfigure && setting.scope !== "client")) continue;
 
             // Update setting data
-            const s = foundry.utils.duplicate(setting);
+            const s = foundry.utils.deepClone(setting);
             s.name = game.i18n.localize(s.name);
             s.hint = game.i18n.localize(s.hint);
             s.value = game.settings.get(s.module, s.key);
@@ -742,8 +769,8 @@ class opening_crawl_UISettings extends FormApplication {
         const fp = new FilePicker({
             type: "image",
             callback: (path) => {
-                $(event.currentTarget).prev().val(path);
-                //this._onSubmit(event);
+                const input = event.currentTarget.previousElementSibling;
+                if (input) input.value = path;
             },
             top: this.position.top + 40,
             left: this.position.left + 10,
