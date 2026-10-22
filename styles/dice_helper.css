@@ -81,3 +81,21 @@ body.light .dice-helper-divider,
     padding-left: 2px;
     font-weight: bold;
 }
+
+/* Foundry 14's reset sets img { display: block; max-width: 100% }.
+   Skill and dialog pools never give these icons a display, so the dice stack. */
+.starwarsffg .dice-pool,
+.starwarsffg_sandbox .dice-pool {
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+}
+
+.starwarsffg .dice-pool img,
+.starwarsffg_sandbox .dice-pool img {
+    display: inline-block;
+    flex: 0 0 auto;
+    max-width: none;
+}
