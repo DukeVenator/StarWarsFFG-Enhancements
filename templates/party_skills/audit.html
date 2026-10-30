@@ -1,0 +1,412 @@
+<section class="party-skills" data-party-skills>
+    <header class="ps-topbar">
+        <div class="ps-topbar-copy">
+            <span class="ps-kicker">{{title}}</span>
+            <h2>{{rosterHeading}}</h2>
+            <p>{{sheetCountLabel}}</p>
+        </div>
+        <div class="ps-actions">
+            {{#if hasRoster}}
+            <button type="button" class="ps-icon-button" data-action="select-all" title="{{selectAllLabel}}" aria-label="{{selectAllLabel}}">
+                <i class="fas fa-check-double"></i>
+            </button>
+            <button type="button" class="ps-icon-button" data-action="select-none" title="{{selectNoneLabel}}" aria-label="{{selectNoneLabel}}">
+                <i class="fas fa-ban"></i>
+            </button>
+            {{/if}}
+            <button type="button" class="ps-icon-button" data-action="refresh" title="{{refreshLabel}}" aria-label="{{refreshLabel}}">
+                <i class="fas fa-rotate"></i>
+            </button>
+        </div>
+    </header>
+
+    <section class="ps-roster-panel" aria-label="{{rosterHeading}}">
+        <div class="ps-roster" role="group" aria-label="{{rosterHeading}}">
+            {{#each roster}}
+            <div class="ps-sheet {{#if checked}}is-on{{/if}} {{#if extra}}is-extra{{/if}}" style="--swatch: {{color}}">
+                <label class="ps-sheet-label" title="{{name}}">
+                    <input type="checkbox" data-actor="{{id}}" {{#if checked}}checked{{/if}} aria-label="{{name}}">
+                    <span class="ps-tick"><i class="fas fa-check"></i></span>
+                    {{#if img}}
+                    <img class="ps-avatar" src="{{img}}" alt="" width="34" height="34" loading="lazy">
+                    {{else}}
+                    <span class="ps-avatar ps-avatar-empty"><i class="fas fa-user"></i></span>
+                    {{/if}}
+                    <span class="ps-sheet-copy">
+                        <span class="ps-sheet-name">{{name}}</span>
+                        <span class="ps-sheet-source" title="{{sourceTitle}}">{{source}}</span>
+                    </span>
+                </label>
+                {{#if extra}}
+                <button type="button" class="ps-sheet-remove" data-action="remove-sheet" data-actor="{{id}}" title="{{@root.removeLabel}}" aria-label="{{@root.removeLabel}}">
+                    <i class="fas fa-xmark"></i>
+                </button>
+                {{/if}}
+            </div>
+            {{/each}}
+
+            {{#if hasAddable}}
+            <label class="ps-add" title="{{addSheetHint}}">
+                <i class="fas fa-plus"></i>
+                <select data-add-sheet aria-label="{{addSheetLabel}}">
+                    <option value="">{{addSheetLabel}}</option>
+                    {{#each addableSheets}}
+                    <option value="{{id}}">{{name}}</option>
+                    {{/each}}
+                </select>
+            </label>
+            {{/if}}
+        </div>
+
+        {{#unless hasRoster}}
+        <p class="ps-roster-note">{{noPlayerSheets}}</p>
+        {{/unless}}
+    </section>
+
+    {{#unless hasRoster}}
+    <div class="ps-empty">
+        <i class="fas fa-users-slash"></i>
+        <p>{{empty}}</p>
+        {{#if hasAddable}}<p class="ps-muted">{{addSheetHint}}</p>{{/if}}
+    </div>
+    {{/unless}}
+
+    {{#if hasRoster}}
+    {{#unless hasSelection}}
+    <p class="ps-notice"><i class="fas fa-circle-info"></i> {{noneSelected}}</p>
+    {{/unless}}
+    {{/if}}
+
+    {{#if hasSelection}}
+    <p class="ps-summary-line">{{summaryLine}}</p>
+    <div class="ps-stats">
+        {{#each summaryTiles}}
+        <div class="ps-stat {{tone}}">
+            <span class="ps-stat-label">{{label}}</span>
+            <strong class="ps-stat-value">{{value}}</strong>
+            <span class="ps-stat-meta">{{meta}}</span>
+        </div>
+        {{/each}}
+    </div>
+
+    {{#if noRanks}}
+    <p class="ps-notice is-warn"><i class="fas fa-triangle-exclamation"></i> {{noRanks}}</p>
+    {{/if}}
+    {{#if noSkills}}
+    <p class="ps-notice is-warn"><i class="fas fa-triangle-exclamation"></i> {{noSkills}}</p>
+    {{/if}}
+
+    <section class="ps-block">
+        <div class="ps-block-head">
+            <div>
+                <h3>{{whoHeading}}</h3>
+                <p>{{whoHint}}</p>
+            </div>
+        </div>
+        <div class="ps-heroes">
+            {{#each characters}}
+            <article class="ps-hero" style="--swatch: {{color}}">
+                <header class="ps-hero-head">
+                    {{#if img}}
+                    <img class="ps-hero-img" src="{{img}}" alt="" width="52" height="52" loading="lazy">
+                    {{else}}
+                    <span class="ps-hero-img ps-avatar-empty"><i class="fas fa-user"></i></span>
+                    {{/if}}
+                    <div class="ps-hero-id">
+                        <h4>{{name}}</h4>
+                        <p>{{players}} <span class="ps-hero-count" title="{{@root.trainedLabel}}">{{trainedCount}} {{@root.trainedWord}}</span></p>
+                    </div>
+                    <button type="button" class="ps-icon-button ps-hero-open" data-action="open-sheet" data-actor="{{id}}" title="{{@root.openLabel}}" aria-label="{{@root.openLabel}}">
+                        <i class="fas fa-up-right-from-square"></i>
+                    </button>
+                </header>
+                {{#if hasTop}}
+                <ul class="ps-pools">
+                    {{#each top}}
+                    <li title="{{title}}">
+                        <span class="ps-pool-name">{{label}}{{#if career}}<span class="ps-career" title="{{@root.careerLabel}}">◆</span>{{/if}}</span>
+                        <span class="ps-pool-rank">R{{rank}}</span>
+                        <span class="ps-pool" title="{{diceTitle}}" aria-label="{{diceTitle}}">
+                            {{#each dice}}
+                            <span class="ps-die is-{{kind}}">
+                                <img class="ps-die-icon" src="{{icon}}" alt="" aria-hidden="true" draggable="false">
+                                <span class="ps-die-count">{{count}}</span>
+                            </span>
+                            {{/each}}
+                            {{#unless dice}}<span class="ps-die-none">—</span>{{/unless}}
+                        </span>
+                    </li>
+                    {{/each}}
+                </ul>
+                {{else}}
+                <p class="ps-muted">{{@root.noTrainedSkills}}</p>
+                {{/if}}
+                <div class="ps-characteristics">
+                    {{#each characteristics}}
+                    <span class="ps-characteristic" title="{{label}}"><b>{{short}}</b>{{value}}</span>
+                    {{/each}}
+                </div>
+            </article>
+            {{/each}}
+        </div>
+    </section>
+
+    {{#if hasSections}}
+    <section class="ps-block">
+        <div class="ps-block-head">
+            <div>
+                <h3>{{chartsHeading}}</h3>
+                <p>{{chartsHint}}</p>
+            </div>
+            <ul class="ps-dice-legend">
+                {{#each diceLegend}}
+                <li><span class="ps-die is-{{kind}}"><img class="ps-die-icon" src="{{icon}}" alt="" aria-hidden="true" draggable="false"></span>{{label}}</li>
+                {{/each}}
+            </ul>
+        </div>
+        <div class="ps-tabs" role="tablist" aria-label="{{chartsHeading}}">
+            {{#each sections}}
+            <button type="button" role="tab" class="ps-tab {{#if active}}is-active{{/if}}" data-section-tab="{{index}}" id="ps-tab-{{index}}" aria-controls="ps-panel-{{index}}" aria-selected="{{#if active}}true{{else}}false{{/if}}">
+                <span class="ps-tab-name">{{type}}</span>
+                <span class="ps-tab-meta is-{{verdict}}">{{verdictLabel}} · {{average}}</span>
+            </button>
+            {{/each}}
+        </div>
+        <div class="ps-panels">
+            {{#each sections}}
+            <article class="ps-panel {{#if active}}is-active{{/if}}" data-section-panel="{{index}}" id="ps-panel-{{index}}" role="tabpanel" aria-labelledby="ps-tab-{{index}}">
+                <header class="ps-panel-head">
+                    <div>
+                        <h4>{{type}}</h4>
+                        <p>{{meta}}</p>
+                    </div>
+                    <span class="ps-verdict is-{{verdict}}">{{verdictLabel}} · {{average}}</span>
+                </header>
+                <div class="ps-chart-layout">
+                    <div class="ps-chart-wrap">
+                        <svg class="ps-chart" viewBox="{{chart.viewBox}}" role="img" aria-label="{{type}}">
+                            <title>{{type}}</title>
+                            {{#each chart.rings}}
+                            <polygon class="ps-ring {{#if major}}is-major{{/if}}" points="{{points}}"></polygon>
+                            {{#if showLabel}}
+                            <text class="ps-ring-label" x="{{labelX}}" y="{{labelY}}" font-size="10">{{score}}</text>
+                            {{/if}}
+                            {{/each}}
+                            {{#each chart.spokes}}
+                            <line class="ps-spoke" x1="{{x1}}" y1="{{y1}}" x2="{{x2}}" y2="{{y2}}"></line>
+                            <text class="ps-spoke-label" x="{{labelX}}" y="{{labelY}}" text-anchor="{{anchor}}" dominant-baseline="middle" font-size="{{fontSize}}">{{label}}</text>
+                            {{/each}}
+                            {{#each chart.series}}
+                            <polygon class="ps-series" data-series="{{id}}" points="{{points}}" fill="{{color}}" stroke="{{color}}"><title>{{name}}</title></polygon>
+                            {{/each}}
+                            <polygon class="ps-best" points="{{chart.best.points}}"><title>{{@root.partyBest}}</title></polygon>
+                            {{#each chart.best.vertices}}
+                            <circle class="ps-best-dot" cx="{{x}}" cy="{{y}}" r="3.5">
+                                <title>{{title}}</title>
+                            </circle>
+                            {{/each}}
+                            {{#each chart.series}}
+                            {{#each vertices}}
+                            <circle class="ps-vertex" cx="{{x}}" cy="{{y}}" r="4.5" fill="{{../color}}">
+                                <title>{{title}}</title>
+                            </circle>
+                            {{/each}}
+                            {{/each}}
+                        </svg>
+                    </div>
+                    <aside class="ps-chart-side">
+                        <ul class="ps-legend">
+                            {{#each chart.series}}
+                            <li><span class="ps-dot" style="background: {{color}}"></span>{{name}}</li>
+                            {{/each}}
+                            <li><span class="ps-dot is-best"></span>{{@root.partyBest}}</li>
+                        </ul>
+                        <h5 class="ps-side-title">{{@root.topInSection}}</h5>
+                        <ul class="ps-top-skills">
+                            {{#each topSkills}}
+                            <li title="{{title}}">
+                                <span class="ps-top-name">{{label}}</span>
+                                <span class="ps-score-badge">{{bestScore}}</span>
+                                <span class="ps-pool">
+                                    {{#each dice}}
+                                    <span class="ps-die is-{{kind}}"><img class="ps-die-icon" src="{{icon}}" alt="" aria-hidden="true" draggable="false"><span class="ps-die-count">{{count}}</span></span>
+                                    {{/each}}
+                                </span>
+                            </li>
+                            {{/each}}
+                        </ul>
+                        <dl class="ps-section-facts">
+                            <div><dt>{{@root.trainedWord}}</dt><dd>{{trainedCount}}</dd></div>
+                            <div><dt>{{@root.overlapTag}}</dt><dd>{{overlapCount}}</dd></div>
+                            <div><dt>{{@root.gapTag}}</dt><dd>{{gapCount}}</dd></div>
+                        </dl>
+                        <p class="ps-chart-hint">{{@root.chartHint}}</p>
+                    </aside>
+                </div>
+            </article>
+            {{/each}}
+        </div>
+    </section>
+    {{/if}}
+
+    <div class="ps-columns">
+        <section class="ps-card ps-card-strengths">
+            <header class="ps-card-head">
+                <h3><i class="fas fa-bolt"></i> {{strengthsHeading}}</h3>
+                <span>{{strengthsHint}}</span>
+            </header>
+            {{#if hasStrengths}}
+            <ul class="ps-entries">
+                {{#each strengths}}
+                <li class="ps-entry">
+                    <div class="ps-entry-row">
+                        <strong>{{label}}</strong>
+                        <span class="ps-score-badge" title="{{@root.scoreLabel}}">{{bestScore}}</span>
+                    </div>
+                    <div class="ps-holders">
+                        {{#each holders}}
+                        <span class="ps-holder" title="{{diceTitle}}">
+                            <span class="ps-holder-name">{{name}}</span>
+                            {{#if rank}}<span class="ps-holder-rank">R{{rank}}</span>{{/if}}
+                            <span class="ps-pool">
+                                {{#each dice}}
+                                <span class="ps-die is-{{kind}}"><img class="ps-die-icon" src="{{icon}}" alt="" aria-hidden="true" draggable="false"><span class="ps-die-count">{{count}}</span></span>
+                                {{/each}}
+                            </span>
+                        </span>
+                        {{/each}}
+                    </div>
+                </li>
+                {{/each}}
+            </ul>
+            {{else}}
+            <p class="ps-muted">{{noStrengths}}</p>
+            {{/if}}
+        </section>
+
+        <section class="ps-card ps-card-weaknesses">
+            <header class="ps-card-head">
+                <h3><i class="fas fa-triangle-exclamation"></i> {{weaknessesHeading}}</h3>
+                <span>{{weaknessesHint}}</span>
+            </header>
+            {{#if hasWeaknesses}}
+            <ul class="ps-entries is-grid">
+                {{#each weaknesses}}
+                <li class="ps-entry is-compact">
+                    <div class="ps-entry-row">
+                        <strong>{{label}}</strong>
+                        <span class="ps-tag {{#if gap}}is-gap{{else}}is-thin{{/if}}">{{tagLabel}}</span>
+                    </div>
+                    <div class="ps-holders">
+                        {{#each holders}}
+                        <span class="ps-holder" title="{{diceTitle}}">
+                            <span class="ps-holder-name">{{name}}</span>
+                            {{#if rank}}<span class="ps-holder-rank">R{{rank}}</span>{{/if}}
+                            <span class="ps-pool">
+                                {{#each dice}}
+                                <span class="ps-die is-{{kind}}"><img class="ps-die-icon" src="{{icon}}" alt="" aria-hidden="true" draggable="false"><span class="ps-die-count">{{count}}</span></span>
+                                {{/each}}
+                            </span>
+                        </span>
+                        {{/each}}
+                    </div>
+                </li>
+                {{/each}}
+            </ul>
+            {{else}}
+            <p class="ps-muted">{{noWeaknesses}}</p>
+            {{/if}}
+        </section>
+    </div>
+
+    <section class="ps-card ps-card-overlaps">
+        <header class="ps-card-head">
+            <h3><i class="fas fa-layer-group"></i> {{overlapsHeading}}</h3>
+            <span>{{overlapsHint}}</span>
+        </header>
+        {{#if hasOverlaps}}
+        <ul class="ps-overlap-grid">
+            {{#each overlaps}}
+            <li class="ps-overlap">
+                <strong>{{label}}</strong>
+                <div class="ps-holders">
+                    {{#each holders}}
+                    <span class="ps-holder" title="{{diceTitle}}">
+                        <span class="ps-holder-name">{{name}}</span>
+                        <span class="ps-holder-rank">R{{rank}}</span>
+                        {{#if career}}<span class="ps-career" title="{{@root.careerLabel}}">◆</span>{{/if}}
+                        <span class="ps-pool">
+                            {{#each dice}}
+                            <span class="ps-die is-{{kind}}"><img class="ps-die-icon" src="{{icon}}" alt="" aria-hidden="true" draggable="false"><span class="ps-die-count">{{count}}</span></span>
+                            {{/each}}
+                        </span>
+                    </span>
+                    {{/each}}
+                </div>
+            </li>
+            {{/each}}
+        </ul>
+        {{else}}
+        <p class="ps-muted">{{noOverlaps}}</p>
+        {{/if}}
+    </section>
+
+    {{#if hasSections}}
+    <details class="ps-breakdown">
+        <summary>
+            <span><i class="fas fa-table-list"></i> {{breakdownHeading}} <small>{{breakdownCount}}</small></span>
+            <span class="ps-muted">{{breakdownHint}}</span>
+        </summary>
+        <div class="ps-table-wrap">
+            <table class="ps-table">
+                <thead>
+                    <tr>
+                        <th>{{skillHeading}}</th>
+                        <th>{{characteristicHeading}}</th>
+                        {{#each characters}}
+                        <th><span class="ps-th-dot" style="background: {{color}}"></span>{{name}}</th>
+                        {{/each}}
+                        <th>{{bestHeading}}</th>
+                        <th>{{coverageHeading}}</th>
+                    </tr>
+                </thead>
+                {{#each table}}
+                <tbody>
+                    <tr class="ps-section-row">
+                        <th colspan="{{colspan}}">{{type}} · {{verdictLabel}} · {{average}}</th>
+                    </tr>
+                    {{#each rows}}
+                    <tr class="is-{{tag}}{{#if strength}} is-strong{{/if}}{{#if weakness}} is-weak{{/if}}">
+                        <th>{{label}}</th>
+                        <td>{{characteristic}}</td>
+                        {{#each cells}}
+                        <td class="ps-cell {{#if trained}}is-trained{{/if}}">
+                            <span class="ps-rank">{{rankLabel}}</span>
+                            <span class="ps-pool" title="{{diceTitle}}" aria-label="{{diceTitle}}">
+                                {{#each dice}}
+                                <span class="ps-die is-{{kind}}"><img class="ps-die-icon" src="{{icon}}" alt="" aria-hidden="true" draggable="false"><span class="ps-die-count">{{count}}</span></span>
+                                {{/each}}
+                                {{#unless dice}}<span class="ps-die-none">—</span>{{/unless}}
+                            </span>
+                            {{#if career}}<span class="ps-career" title="{{careerLabel}}">◆</span>{{/if}}
+                        </td>
+                        {{/each}}
+                        <td class="ps-best-cell" title="{{best.title}}">
+                            <span class="ps-score-badge">{{best.score}}</span>
+                            <span class="ps-pool">
+                                {{#each best.dice}}
+                                <span class="ps-die is-{{kind}}"><img class="ps-die-icon" src="{{icon}}" alt="" aria-hidden="true" draggable="false"><span class="ps-die-count">{{count}}</span></span>
+                                {{/each}}
+                            </span>
+                        </td>
+                        <td><span class="ps-tag is-{{tag}}">{{tagLabel}}</span></td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+                {{/each}}
+            </table>
+        </div>
+    </details>
+    {{/if}}
+    {{/if}}
+</section>
