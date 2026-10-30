@@ -1,15 +1,18 @@
 <form>
     <h2>{{localize "ffg-star-wars-enhancements.opening-crawl.new"}}</h2>
-    <div class="form-group">
-        <label>{{localize "ffg-star-wars-enhancements.opening-crawl.type-label"}}</label>
-        <div class="form-fields">
-            <select name="crawl_type">
-                {{#each types as |type|}}
-                <option value="{{type.id}}">{{type.label}}</option>
-                {{/each}}
-            </select>
+    <fieldset class="opening-crawl-type-fieldset">
+        <legend>{{localize "ffg-star-wars-enhancements.opening-crawl.type-label"}}</legend>
+        <div class="opening-crawl-type-grid">
+            {{#each types as |type|}}
+            <label class="opening-crawl-type-card crawl-theme-{{type.id}}">
+                <input type="radio" name="crawl_type" value="{{type.id}}" {{#if type.checked}}checked{{/if}}>
+                <span class="opening-crawl-type-chip" aria-hidden="true"></span>
+                <span class="opening-crawl-type-name">{{type.label}}</span>
+                <span class="opening-crawl-type-description">{{type.description}}</span>
+            </label>
+            {{/each}}
         </div>
-    </div>
+    </fieldset>
     <button type="submit" class="create" value="create"><i class="fas fa-plus"></i>{{localize "ffg-star-wars-enhancements.opening-crawl.create-journal"}}</button>
     {{#if journals}}
     <h2 style="margin-top: 1em">{{localize "ffg-star-wars-enhancements.opening-crawl.launch"}}</h2>

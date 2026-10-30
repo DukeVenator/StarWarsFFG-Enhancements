@@ -1,37 +1,121 @@
-import { setting_image, setting_audio } from "./settings.js";
 import { log_msg as log } from "./util.js";
+import { CrawlEffects } from "./crawl_effects.js";
+import {
+    PAN_LEAD_DEFAULT,
+    NO_IMAGE_PAN_FRACTION,
+    clamp,
+    css_seconds,
+    intro_schedule,
+    reveal_distance,
+} from "./opening_crawl_timing.js";
+import {
+    CRAWL_TYPE_IDS,
+    crawl_number_html,
+    crawl_starjedi_text,
+    crawl_title_text,
+    crawl_type_choices,
+    crawl_type_of,
+} from "./opening_crawl_types.js";
 
+const MODULE_ID = "ffg-star-wars-enhancements";
 const CRAWL_FLAG = "crawl-type";
-const DEFAULT_CRAWL_TYPE = "saga";
 
 /**
- * Crawl styles. A new type is an entry here plus a `.crawl-type-<id>` block in opening_crawl.css.
- * `intro` keys are localized. `wordmark` is the copyright-safe stand-in used when no logo image is set.
+ * Order the settings appear in the Opening Crawl configuration window. Keeping
+ * the list here (rather than relying on registration order) lets the UI group
+ * timing, presentation, and effects without scattering related controls.
  */
-const CRAWL_TYPES = {
-    saga: {
-        id: "saga",
-        label: "ffg-star-wars-enhancements.opening-crawl.type-saga",
-        intro: ["ffg-star-wars-enhancements.opening-crawl.intro-1", "ffg-star-wars-enhancements.opening-crawl.intro-2"],
-        wordmark: ["STAR", "WARS"],
-    },
-    "clone-wars": {
-        id: "clone-wars",
-        label: "ffg-star-wars-enhancements.opening-crawl.type-clone-wars",
-        intro: [
-            "ffg-star-wars-enhancements.opening-crawl.type-clone-wars-intro-1",
-            "ffg-star-wars-enhancements.opening-crawl.type-clone-wars-intro-2",
-        ],
-        wordmark: ["CLONE", "WARS"],
-    },
+const SETTING_ORDER = [
+    "opening-crawl-folder",
+    "opening-crawl-music",
+    "opening-crawl-music-delay",
+    "opening-crawl-playlist",
+    "opening-crawl-playlist-stop",
+    "opening-crawl-logo",
+    "opening-crawl-logo-saga",
+    "opening-crawl-logo-clone-wars",
+    "opening-crawl-logo-criminal-empire",
+    "opening-crawl-image-right",
+    "opening-crawl-image-bottom",
+    "opening-crawl-font-size",
+    "opening-crawl-intro-text-delay",
+    "opening-crawl-intro-text-duration",
+    "opening-crawl-intro-logo-delay",
+    "opening-crawl-intro-logo-duration",
+    "opening-crawl-intro-crawl-delay",
+    "opening-crawl-intro-crawl-duration",
+    "opening-crawl-intro-crawl-duration-adjust",
+    "opening-crawl-intro-crawl-speed",
+    "opening-crawl-intro-pan-lead",
+    "opening-crawl-intro-pan-delay",
+    "opening-crawl-intro-pan-duration",
+    "opening-crawl-intro-close-delay",
+    "opening-crawl-effects",
+    "opening-crawl-effects-particles",
+    "opening-crawl-effects-scanlines",
+    "opening-crawl-effects-vignette",
+    "opening-crawl-effects-streaks",
+    "opening-crawl-effects-intensity",
+    "opening-crawl-effects-speed",
+    "opening-crawl-effects-density",
+];
+
+const SETTING_GROUPS = {
+    "opening-crawl-folder": "general",
+    "opening-crawl-music": "general",
+    "opening-crawl-music-delay": "general",
+    "opening-crawl-playlist": "general",
+    "opening-crawl-playlist-stop": "general",
+    "opening-crawl-logo": "presentation",
+    "opening-crawl-logo-saga": "presentation",
+    "opening-crawl-logo-clone-wars": "presentation",
+    "opening-crawl-logo-criminal-empire": "presentation",
+    "opening-crawl-image-right": "presentation",
+    "opening-crawl-image-bottom": "presentation",
+    "opening-crawl-font-size": "presentation",
+    "opening-crawl-intro-text-delay": "timing",
+    "opening-crawl-intro-text-duration": "timing",
+    "opening-crawl-intro-logo-delay": "timing",
+    "opening-crawl-intro-logo-duration": "timing",
+    "opening-crawl-intro-crawl-delay": "timing",
+    "opening-crawl-intro-crawl-duration": "timing",
+    "opening-crawl-intro-crawl-duration-adjust": "timing",
+    "opening-crawl-intro-crawl-speed": "timing",
+    "opening-crawl-intro-pan-lead": "timing",
+    "opening-crawl-intro-pan-delay": "timing",
+    "opening-crawl-intro-pan-duration": "timing",
+    "opening-crawl-intro-close-delay": "timing",
+    "opening-crawl-effects": "effects",
+    "opening-crawl-effects-particles": "effects",
+    "opening-crawl-effects-scanlines": "effects",
+    "opening-crawl-effects-vignette": "effects",
+    "opening-crawl-effects-streaks": "effects",
+    "opening-crawl-effects-intensity": "effects",
+    "opening-crawl-effects-speed": "effects",
+    "opening-crawl-effects-density": "effects",
 };
 
-function crawl_type_of(id) {
-    return CRAWL_TYPES[id] ?? CRAWL_TYPES[DEFAULT_CRAWL_TYPE];
-}
+const FILE_PICKER_TYPES = {
+    "opening-crawl-music": "audio",
+    "opening-crawl-logo": "image",
+    "opening-crawl-logo-saga": "image",
+    "opening-crawl-logo-clone-wars": "image",
+    "opening-crawl-logo-criminal-empire": "image",
+};
 
-function journal_crawl_type(journal) {
-    return crawl_type_of(journal?.getFlag?.("ffg-star-wars-enhancements", CRAWL_FLAG)).id;
+/**
+ * Register a world-scoped setting whose name/hint come from the usual
+ * `opening-crawl.<key>` localization keys.
+ */
+function register_crawl_setting(key, config) {
+    game.settings.register(MODULE_ID, key, {
+        module: MODULE_ID,
+        name: game.i18n.localize(`ffg-star-wars-enhancements.opening-crawl.${key}`),
+        hint: game.i18n.localize(`ffg-star-wars-enhancements.opening-crawl.${key}-hint`),
+        scope: "world",
+        config: false,
+        ...config,
+    });
 }
 
 function crawl_text(value) {
@@ -40,11 +124,12 @@ function crawl_text(value) {
         .trim();
 }
 
-function crawl_type_choices() {
-    return Object.values(CRAWL_TYPES).map((type) => ({
-        id: type.id,
-        label: game.i18n.localize(type.label),
-    }));
+function is_remote_audio(src) {
+    return /^https?:\/\//i.test(String(src ?? "").trim());
+}
+
+function journal_crawl_type(journal) {
+    return crawl_type_of(journal?.getFlag?.(MODULE_ID, CRAWL_FLAG)).id;
 }
 
 /**
@@ -52,7 +137,7 @@ function crawl_type_choices() {
  */
 export function init() {
     log("opening-crawl", "Initializing");
-    game.settings.registerMenu("ffg-star-wars-enhancements", "opening-crawl_UISettings", {
+    game.settings.registerMenu(MODULE_ID, "opening-crawl_UISettings", {
         name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.ui.name"),
         hint: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.ui.hint"),
         label: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.ui.label"),
@@ -60,191 +145,61 @@ export function init() {
         type: opening_crawl_UISettings,
         restricted: true,
     });
-    game.settings.register("ffg-star-wars-enhancements", "opening-crawl-folder", {
-        module: "ffg-star-wars-enhancements",
-        name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-folder"),
-        hint: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-folder-hint"),
-        scope: "world",
-        config: false,
-        type: String,
-        default: "Opening Crawls",
-    });
-    game.settings.register("ffg-star-wars-enhancements", "opening-crawl-music", {
-        module: "ffg-star-wars-enhancements",
-        name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-music"),
-        hint: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-music-hint"),
-        scope: "world",
-        config: false,
-        type: String,
-        filePicker: "audio",
-        default: "",
-    });
-    game.settings.register("ffg-star-wars-enhancements", "opening-crawl-logo", {
-        module: "ffg-star-wars-enhancements",
-        name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-logo"),
-        hint: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-logo-hint"),
-        scope: "world",
-        config: false,
-        type: String,
-        filePicker: "folder",
-        default: "",
-    });
-    game.settings.register("ffg-star-wars-enhancements", "opening-crawl-music-delay", {
-        module: "ffg-star-wars-enhancements",
-        name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-music-delay"),
-        hint: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-music-delay-hint"),
-        scope: "world",
-        config: false,
-        type: Number,
-        default: 0.0,
-    });
-    game.settings.register("ffg-star-wars-enhancements", "opening-crawl-playlist", {
-        module: "ffg-star-wars-enhancements",
-        name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-playlist"),
-        hint: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-playlist-hint"),
-        scope: "world",
-        config: false,
-        type: String,
-        default: "",
-    });
-    game.settings.register("ffg-star-wars-enhancements", "opening-crawl-playlist-stop", {
-        module: "ffg-star-wars-enhancements",
-        name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-playlist-stop"),
-        hint: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-playlist-stop-hint"),
-        scope: "world",
-        config: false,
-        type: Boolean,
-        default: true,
-    });
-    game.settings.register("ffg-star-wars-enhancements", "opening-crawl-image-right", {
-        module: "ffg-star-wars-enhancements",
-        name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-image-right"),
-        hint: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-image-right-hint"),
-        scope: "world",
-        config: false,
-        type: Number,
-        default: 0,
-    });
-    game.settings.register("ffg-star-wars-enhancements", "opening-crawl-image-bottom", {
-        module: "ffg-star-wars-enhancements",
-        name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-image-bottom"),
-        hint: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-image-bottom-hint"),
-        scope: "world",
-        config: false,
-        type: Number,
-        default: 1300,
-    });
-    game.settings.register("ffg-star-wars-enhancements", "opening-crawl-font-size", {
-        module: "ffg-star-wars-enhancements",
-        name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-font-size"),
-        hint: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-font-size-hint"),
-        scope: "world",
-        config: false,
-        type: Number,
-        default: 350,
-    });
-    game.settings.register("ffg-star-wars-enhancements", "opening-crawl-intro-text-delay", {
-        module: "ffg-star-wars-enhancements",
-        name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-intro-text-delay"),
-        hint: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-intro-text-delay-hint"),
-        scope: "world",
-        config: false,
-        type: Number,
-        default: 1,
-    });
-    game.settings.register("ffg-star-wars-enhancements", "opening-crawl-intro-text-duration", {
-        module: "ffg-star-wars-enhancements",
-        name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-intro-text-duration"),
-        hint: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-intro-text-duration-hint"),
-        scope: "world",
-        config: false,
-        type: Number,
-        default: 6,
-    });
-    game.settings.register("ffg-star-wars-enhancements", "opening-crawl-intro-logo-delay", {
-        module: "ffg-star-wars-enhancements",
-        name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-intro-logo-delay"),
-        hint: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-intro-logo-delay-hint"),
-        scope: "world",
-        config: false,
-        type: Number,
-        default: 2,
-    });
-    game.settings.register("ffg-star-wars-enhancements", "opening-crawl-intro-logo-duration", {
-        module: "ffg-star-wars-enhancements",
-        name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-intro-logo-duration"),
-        hint: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-intro-logo-duration-hint"),
-        scope: "world",
-        config: false,
-        type: Number,
-        default: 11,
-    });
-    game.settings.register("ffg-star-wars-enhancements", "opening-crawl-intro-crawl-delay", {
-        module: "ffg-star-wars-enhancements",
-        name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-intro-crawl-delay"),
-        hint: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-intro-crawl-delay-hint"),
-        scope: "world",
-        config: false,
-        type: Number,
-        default: 6,
-    });
-    game.settings.register("ffg-star-wars-enhancements", "opening-crawl-intro-crawl-duration", {
-        module: "ffg-star-wars-enhancements",
-        name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-intro-crawl-duration"),
-        hint: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-intro-crawl-duration-hint"),
-        scope: "world",
-        config: false,
-        type: Number,
-        default: 73,
-    });
-    game.settings.register("ffg-star-wars-enhancements", "opening-crawl-intro-crawl-duration-adjust", {
-        module: "ffg-star-wars-enhancements",
-        name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-intro-crawl-duration-adjust"),
-        hint: game.i18n.localize(
-            "ffg-star-wars-enhancements.opening-crawl.opening-crawl-intro-crawl-duration-adjust-hint"
-        ),
-        scope: "world",
-        config: false,
-        type: Number,
-        default: 0,
-    });
-    game.settings.register("ffg-star-wars-enhancements", "opening-crawl-intro-crawl-speed", {
-        module: "ffg-star-wars-enhancements",
-        name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-intro-crawl-speed"),
-        hint: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-intro-crawl-speed-hint"),
-        scope: "world",
-        config: false,
+
+    register_crawl_setting("opening-crawl-folder", { type: String, default: "Opening Crawls" });
+    register_crawl_setting("opening-crawl-music", { type: String, filePicker: "audio", default: "" });
+    register_crawl_setting("opening-crawl-music-delay", { type: Number, default: 0.0 });
+    register_crawl_setting("opening-crawl-playlist", { type: String, default: "" });
+    register_crawl_setting("opening-crawl-playlist-stop", { type: Boolean, default: true });
+    register_crawl_setting("opening-crawl-logo", { type: String, filePicker: "image", default: "" });
+    for (const type of CRAWL_TYPE_IDS) {
+        register_crawl_setting(`opening-crawl-logo-${type}`, { type: String, filePicker: "image", default: "" });
+    }
+    register_crawl_setting("opening-crawl-image-right", { type: Number, default: 0 });
+    register_crawl_setting("opening-crawl-image-bottom", { type: Number, default: 1300 });
+    register_crawl_setting("opening-crawl-font-size", { type: Number, default: 350 });
+    register_crawl_setting("opening-crawl-intro-text-delay", { type: Number, default: 1 });
+    register_crawl_setting("opening-crawl-intro-text-duration", { type: Number, default: 6 });
+    register_crawl_setting("opening-crawl-intro-logo-delay", { type: Number, default: 2 });
+    register_crawl_setting("opening-crawl-intro-logo-duration", { type: Number, default: 11 });
+    register_crawl_setting("opening-crawl-intro-crawl-delay", { type: Number, default: 6 });
+    register_crawl_setting("opening-crawl-intro-crawl-duration", { type: Number, default: 73 });
+    register_crawl_setting("opening-crawl-intro-crawl-duration-adjust", { type: Number, default: 0 });
+    register_crawl_setting("opening-crawl-intro-crawl-speed", {
         type: Number,
         range: { min: 0.1, max: 5.0, step: 0.1 },
         default: 1.0,
     });
-    game.settings.register("ffg-star-wars-enhancements", "opening-crawl-intro-pan-delay", {
-        module: "ffg-star-wars-enhancements",
-        name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-intro-pan-delay"),
-        hint: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-intro-pan-delay-hint"),
-        scope: "world",
-        config: false,
+    register_crawl_setting("opening-crawl-intro-pan-lead", {
         type: Number,
-        default: 0,
+        range: { min: 0, max: 15, step: 0.5 },
+        default: PAN_LEAD_DEFAULT,
     });
-    game.settings.register("ffg-star-wars-enhancements", "opening-crawl-intro-pan-duration", {
-        module: "ffg-star-wars-enhancements",
-        name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-intro-pan-duration"),
-        hint: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-intro-pan-duration-hint"),
-        scope: "world",
-        config: false,
+    register_crawl_setting("opening-crawl-intro-pan-delay", { type: Number, default: 0 });
+    register_crawl_setting("opening-crawl-intro-pan-duration", { type: Number, default: 7 });
+    register_crawl_setting("opening-crawl-intro-close-delay", { type: Number, default: 3 });
+
+    register_crawl_setting("opening-crawl-effects", { type: Boolean, default: true });
+    register_crawl_setting("opening-crawl-effects-particles", { type: Boolean, default: true });
+    register_crawl_setting("opening-crawl-effects-scanlines", { type: Boolean, default: true });
+    register_crawl_setting("opening-crawl-effects-vignette", { type: Boolean, default: true });
+    register_crawl_setting("opening-crawl-effects-streaks", { type: Boolean, default: true });
+    register_crawl_setting("opening-crawl-effects-intensity", {
         type: Number,
-        default: 7,
+        range: { min: 0, max: 100, step: 1 },
+        default: 60,
     });
-    game.settings.register("ffg-star-wars-enhancements", "opening-crawl-intro-close-delay", {
-        module: "ffg-star-wars-enhancements",
-        name: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-intro-close-delay"),
-        hint: game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.opening-crawl-intro-close-delay-hint"),
-        scope: "world",
-        config: false,
+    register_crawl_setting("opening-crawl-effects-speed", {
         type: Number,
-        default: 3,
+        range: { min: 0.2, max: 2, step: 0.1 },
+        default: 1,
     });
+    register_crawl_setting("opening-crawl-effects-density", {
+        type: Number,
+        range: { min: 20, max: 200, step: 5 },
+        default: 80,
+    });
+
     log("opening-crawl", "Initialized");
 }
 
@@ -276,8 +231,14 @@ class OpeningCrawlApplication extends HandlebarsApplicationMixin(ApplicationV2) 
                 resizable: true,
             },
             position: {
-                width: 4096,
-                height: 2160,
+                // Open at the client's viewport instead of a fixed 4096x2160.
+                // A large window is resized down after its first paint, and the
+                // intro/logo layers promoted with `will-change` could keep their
+                // pre-resize texture: the intro line and wordmark then stayed
+                // painted over the crawl on some GPU drivers. Sizing it correctly
+                // up front avoids that first, stale rasterization.
+                width: globalThis.innerWidth || 4096,
+                height: globalThis.innerHeight || 2160,
             },
         });
     }
@@ -295,53 +256,165 @@ class OpeningCrawlApplication extends HandlebarsApplicationMixin(ApplicationV2) 
      * @returns object provided to the constructor
      */
     _prepareContext(options) {
-        let data = this.data;
-        data.img = {};
-        data.img.bottom = game.settings.get("ffg-star-wars-enhancements", "opening-crawl-image-bottom");
-        data.img.right = game.settings.get("ffg-star-wars-enhancements", "opening-crawl-image-right");
-        data.size = game.settings.get("ffg-star-wars-enhancements", "opening-crawl-font-size");
-        data.intro_text_delay = game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-text-delay");
-        data.intro_text_duration = game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-text-duration");
-        data.intro_logo_delay = game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-logo-delay");
-        data.intro_logo_duration = game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-logo-duration");
-        data.intro_crawl_delay = game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-crawl-delay");
-        data.intro_crawl_duration = game.settings.get(
-            "ffg-star-wars-enhancements",
-            "opening-crawl-intro-crawl-duration"
-        );
-        data.intro_crawl_duration_adjust = game.settings.get(
-            "ffg-star-wars-enhancements",
-            "opening-crawl-intro-crawl-duration-adjust"
-        );
-        data.intro_crawl_speed = game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-crawl-speed");
-        data.intro_pan_delay = game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-pan-delay");
-        data.intro_pan_duration = game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-pan-duration");
-        const crawlType = crawl_type_of(data.crawlType);
-        data.crawlType = crawlType.id;
-        data.intro = crawlType.intro.map((key) => game.i18n.localize(key));
-        data.wordmark = crawlType.wordmark;
+        const data = this.data;
+        const type = crawl_type_of(data.crawlType);
+        const globalLogo = game.settings.get(MODULE_ID, "opening-crawl-logo") || "";
+        const typeLogo = game.settings.get(MODULE_ID, `opening-crawl-logo-${type.id}`) || "";
+
+        data.img = {
+            bottom: opening_crawl_setting("opening-crawl-image-bottom"),
+            right: opening_crawl_setting("opening-crawl-image-right"),
+        };
+        data.size = opening_crawl_setting("opening-crawl-font-size");
+        data.intro_text_delay = opening_crawl_setting("opening-crawl-intro-text-delay");
+        data.intro_text_duration = opening_crawl_setting("opening-crawl-intro-text-duration");
+        data.intro_logo_delay = opening_crawl_setting("opening-crawl-intro-logo-delay");
+        data.intro_logo_duration = opening_crawl_setting("opening-crawl-intro-logo-duration");
+        data.intro_crawl_delay = opening_crawl_setting("opening-crawl-intro-crawl-delay");
+        data.intro_crawl_duration = opening_crawl_setting("opening-crawl-intro-crawl-duration");
+        data.intro_crawl_duration_adjust = opening_crawl_setting("opening-crawl-intro-crawl-duration-adjust");
+        data.intro_crawl_speed = opening_crawl_setting("opening-crawl-intro-crawl-speed");
+        data.intro_pan_delay = opening_crawl_setting("opening-crawl-intro-pan-delay");
+        data.intro_pan_duration = opening_crawl_setting("opening-crawl-intro-pan-duration");
+        data.intro_pan_lead = opening_crawl_setting("opening-crawl-intro-pan-lead");
+        data.crawlType = type.id;
+        data.crawlTypeLabel = game.i18n.localize(type.label);
+        data.intro = type.intro.map((key) => game.i18n.localize(key));
+        // The Criminal Empire wordmark uses SWCrawlTitle, so it needs the same
+        // S/L glyph substitution as the episode and title. StarJedi wordmarks
+        // need their own O->0 substitution; News Cycle needs neither.
+        data.wordmark = type.wordmark.map((line) => {
+            if (type.wordmarkUsesTitleFont) return crawl_title_text(line);
+            if (type.wordmarkStarJedi) return crawl_starjedi_text(line);
+            return line;
+        });
+        // SWCrawlTitle renders a capital S as the STAR WARS logo; use its
+        // normal lowercase-s glyph and uppercase the title in JS instead.
+        data.episode = crawl_title_text(data.episode);
+        data.title = crawl_title_text(data.title, { uppercase: true });
+        // SWCrawlTitle gives "1" a very wide advance (it is designed for film
+        // numerals), which prints SESSION 10 as SESSION 1 0. Tighten only the
+        // digit runs; crawl_number_html escapes the rest of the text.
+        data.episode_html = crawl_number_html(data.episode);
+        data.title_html = crawl_number_html(data.title);
+        // A per-type logo wins; the global logo is the fallback for existing worlds.
+        // Older builds used a folder picker here, so ignore a stored directory path.
+        const logo_path = (value) => {
+            const path = String(value ?? "").trim();
+            return path && !path.endsWith("/") ? path : "";
+        };
+        data.logo = logo_path(typeLogo) || logo_path(globalLogo);
+        data.effects = this._effect_settings(type);
+        data.effectsClass = [
+            data.effects.enabled ? "crawl-effects-active" : "",
+            data.effects.particles ? "crawl-effects-particles" : "",
+            data.effects.scanlines ? "crawl-effects-scanlines-on" : "",
+            data.effects.vignette ? "crawl-effects-vignette-on" : "",
+            data.effects.streaks ? "crawl-effects-streaks" : "",
+        ]
+            .filter(Boolean)
+            .join(" ");
         return data;
     }
 
     /**
+     * Filter the user's effect settings through what this crawl type supports.
+     * Saga returns a disabled object; Clone Wars and Criminal Empire disagree on
+     * scanlines and streaks.
+     */
+    _effect_settings(type) {
+        const support = type.effects;
+        const master = Boolean(game.settings.get(MODULE_ID, "opening-crawl-effects"));
+        const enabled = master && Boolean(support);
+        const toggle = (key) => Boolean(game.settings.get(MODULE_ID, `opening-crawl-effects-${key}`));
+        const intensity = clamp(opening_crawl_setting("opening-crawl-effects-intensity") / 100, 0, 1);
+        const speed = opening_crawl_setting("opening-crawl-effects-speed");
+        const density = opening_crawl_setting("opening-crawl-effects-density");
+
+        return {
+            enabled,
+            particles: enabled && toggle("particles") && Boolean(support?.kind),
+            scanlines: enabled && toggle("scanlines") && Boolean(support?.scanlines),
+            vignette: enabled && toggle("vignette") && Boolean(support?.vignette),
+            streaks: enabled && toggle("streaks") && Boolean(support?.streaks),
+            kind: support?.kind ?? "dust",
+            intensity,
+            speed: speed > 0 ? speed : 1,
+            density: density > 0 ? density : 80,
+            particleColor: support?.particle ?? "#8fd8ff",
+            streakColor: support?.streak ?? "#d6f2ff",
+        };
+    }
+
+    /**
      * Play this.data.music using the Playlist volume.
-     * The sound should already be preloaded in socket_listener.
+     * Remote URLs use a plain audio element: Foundry's Sound preload fetches the
+     * whole track through the CORS-enabled buffer pipeline, which can stall or be
+     * rejected by hosts such as archive.org. The element streams immediately and
+     * keeps the crawl independent of the audio transport.
      */
     async play_music() {
-        if (!this.data.sound) {
+        const music = this.data.music;
+        const volume = clamp(
+            Number(game.settings.get("core", "globalPlaylistVolume")) || 0,
+            0,
+            1
+        );
+        const delay = game.settings.get("ffg-star-wars-enhancements", "opening-crawl-music-delay") * 1000;
+
+        // Start buffering remote tracks immediately so the music is ready when
+        // the configured delay ends. Streamed audio does not block the crawl.
+        if (is_remote_audio(music)) {
+            this.remote_audio = new Audio(music);
+            this.remote_audio.volume = volume;
+            this.remote_audio.preload = "auto";
+            this.remote_audio.load();
+        }
+
+        await sleep(delay);
+        if (this.closing) return;
+
+        if (is_remote_audio(music)) {
+            await this.play_remote_music(music, volume);
+            return;
+        }
+
+        let sound = this.data.sound;
+        if (!sound && this.audioReady) {
+            try {
+                sound = await this.audioReady;
+            } catch (error) {
+                log("opening-crawl", "music preload failed: " + error);
+            }
+        }
+        if (!sound || this.closing) {
             log("opening-crawl", "no sound available to play");
             return;
         }
 
-        let volume = game.settings.get("core", "globalPlaylistVolume");
-        const sound = this.data.sound;
-        const delay = game.settings.get("ffg-star-wars-enhancements", "opening-crawl-music-delay") * 1000;
-        
-        await sleep(delay);
-        sound.play({
-            volume: volume,
-        });
-        this.sound = sound;
+        try {
+            await sound.play({ volume: volume });
+            this.sound = sound;
+        } catch (error) {
+            log("opening-crawl", "music playback failed: " + error);
+        }
+    }
+
+    /** Stream a remote music URL without waiting for Foundry's audio buffer cache. */
+    async play_remote_music(src, volume) {
+        const audio = this.remote_audio ?? new Audio(src);
+        audio.volume = volume;
+        try {
+            await audio.play();
+            if (this.closing) {
+                audio.pause();
+                return;
+            }
+            this.remote_audio = audio;
+            log("opening-crawl", "remote music started");
+        } catch (error) {
+            log("opening-crawl", "remote music playback failed: " + error);
+        }
     }
 
     /**
@@ -379,10 +452,11 @@ class OpeningCrawlApplication extends HandlebarsApplicationMixin(ApplicationV2) 
         super._onRender(context, options);
 
         this._timeCrawl();
+        this._start_effects();
 
-        // When music is configured, start playing it (already preloaded)
-        if (this.data.music && this.data.sound) {
-            // Sound is already preloaded, start playing it
+        // Music is preloaded in the background (or streamed for remote URLs),
+        // so start the delayed playback even before the sound object exists.
+        if (this.data.music) {
             this.play_music();
         }
         // When a playlist is configured, the launching client starts it for everyone
@@ -393,6 +467,15 @@ class OpeningCrawlApplication extends HandlebarsApplicationMixin(ApplicationV2) 
 
     close(options) {
         this.closing = true;
+        this._clear_timers();
+        this.effects?.destroy();
+        this.effects = null;
+        if (this.remote_audio) {
+            this.remote_audio.pause();
+            this.remote_audio.removeAttribute("src");
+            this.remote_audio.load?.();
+            this.remote_audio = null;
+        }
         if (this.sound) {
             this.sound.stop();
             this.sound = null;
@@ -407,15 +490,21 @@ class OpeningCrawlApplication extends HandlebarsApplicationMixin(ApplicationV2) 
         return super.close(options);
     }
 
+    _root() {
+        const host = this.element?.jquery ? this.element[0] : this.element;
+        if (host?.classList?.contains("ffg-star-wars-enhancements-opening-crawl")) return host;
+        return host?.querySelector?.(".ffg-star-wars-enhancements-opening-crawl");
+    }
+
     /**
      * The configured duration is how long the original window-sized crawl took.
      * Longer text keeps that same pace, so the scroll is extended instead of sped up.
+     * Once the text is measured, the whole reveal schedule is built from that fitted
+     * scroll: the pan starts while the last lines are still on screen.
      */
     _timeCrawl() {
-        const host = this.element?.jquery ? this.element[0] : this.element;
-        const root = host?.classList?.contains("ffg-star-wars-enhancements-opening-crawl")
-            ? host
-            : host?.querySelector?.(".ffg-star-wars-enhancements-opening-crawl");
+        const root = this._root();
+        this.root = root;
         const titles = root?.querySelector?.(".titles");
         const content = titles?.querySelector?.(":scope > div");
         const configured = crawl_scroll_seconds();
@@ -426,29 +515,146 @@ class OpeningCrawlApplication extends HandlebarsApplicationMixin(ApplicationV2) 
             seconds = configured * Math.max(1, travel / reference);
         }
         this.fittedCrawlSeconds = seconds;
+
+        const schedule = intro_schedule({ ...intro_timing_settings(), crawlScroll: seconds });
+        this.schedule = schedule;
         if (!root) return;
-        root.style.setProperty("--intro-crawl-duration", `${seconds}s`);
-        const ending =
-            opening_crawl_setting("opening-crawl-intro-text-delay") +
-            opening_crawl_setting("opening-crawl-intro-text-duration") +
-            opening_crawl_setting("opening-crawl-intro-crawl-delay") +
-            seconds +
-            opening_crawl_setting("opening-crawl-intro-pan-delay");
-        root.style.setProperty("--intro-ending-delay", `${ending}s`);
+
+        root.style.setProperty("--intro-crawl-duration", css_seconds(seconds));
+        root.style.setProperty("--intro-ending-delay", css_seconds(schedule.panStart));
+        root.style.setProperty("--intro-ending-duration", css_seconds(schedule.panDuration));
+        // Keep the wordmark from sitting over the first crawl lines: if the
+        // configured fly-away is longer than the gap between logo and text, trim
+        // it so the logo animation finishes exactly when the crawl begins.
+        const logo_start =
+            schedule.textDelay +
+            schedule.textDuration +
+            opening_crawl_setting("opening-crawl-intro-logo-delay");
+        const logo_gap = Math.max(0, schedule.crawlStart - logo_start);
+        const logo_duration = Math.min(
+            opening_crawl_setting("opening-crawl-intro-logo-duration"),
+            logo_gap
+        );
+        root.style.setProperty("--intro-logo-duration", css_seconds(logo_duration));
+        // A safe fallback until the planet has been measured.
+        const viewport = root.clientHeight || globalThis.innerHeight || 0;
+        root.style.setProperty("--crawl-pan-distance", `${Math.round(viewport * NO_IMAGE_PAN_FRACTION)}px`);
+        root.style.setProperty("--crawl-effects-intensity", String(this.data.effects?.intensity ?? 0.6));
         root.classList.add("crawl-timed");
+        this._schedule_timers(root, schedule);
+        this._measure_pan(root).catch((error) => log("opening-crawl", "could not measure pan: " + error));
+    }
+
+    _clear_timers() {
+        if (this._pan_timer) clearTimeout(this._pan_timer);
+        if (this._close_timer) clearTimeout(this._close_timer);
+        if (this._intro_timer) clearTimeout(this._intro_timer);
+        if (this._logo_timer) clearTimeout(this._logo_timer);
+        if (this._crawl_timer) clearTimeout(this._crawl_timer);
+        this._pan_timer = null;
+        this._close_timer = null;
+        this._intro_timer = null;
+        this._logo_timer = null;
+        this._crawl_timer = null;
+    }
+
+    _schedule_timers(root, schedule) {
+        this._clear_timers();
+        // Remove each finished stage from the document. A completed CSS animation
+        // keeps its element (and its compositor layer) around at opacity 0; on
+        // some clients the stale layer stayed painted over the crawl, so the
+        // intro line and wordmark appeared again among the crawl text. Taking the
+        // elements out of the document guarantees they cannot be painted again.
+        const logo_start =
+            schedule.textDelay +
+            schedule.textDuration +
+            opening_crawl_setting("opening-crawl-intro-logo-delay");
+        this._intro_timer = setTimeout(() => {
+            const intro = root.querySelector(".introBackground");
+            if (intro) intro.style.display = "none";
+        }, Math.max(0, logo_start) * 1000);
+        this._logo_timer = setTimeout(() => {
+            const logo = root.querySelector(".logo");
+            if (logo) logo.style.display = "none";
+        }, Math.max(0, schedule.crawlStart) * 1000);
+        this._crawl_timer = setTimeout(() => {
+            const titles = root.querySelector(".titles");
+            if (titles) titles.style.display = "none";
+        }, Math.max(0, schedule.crawlEnd + 0.25) * 1000);
+        this._pan_timer = setTimeout(() => {
+            this._pan_started = true;
+            root.classList.add("is-panning");
+        }, Math.max(0, schedule.panStart) * 1000);
+
+        this.closeScheduled = schedule.autoClose;
+        if (schedule.autoClose) {
+            this._close_timer = setTimeout(() => {
+                if (!this.closing) this.close();
+            }, schedule.windowClose * 1000);
+        }
+    }
+
+    /**
+     * Measure the planet after it decodes and scroll the starfield just far enough
+     * for its centre to land at 56% of the viewport. Skipped once the pan has begun,
+     * so a slow image load never makes the pan jump.
+     */
+    async _measure_pan(root) {
+        const image = root.querySelector(".backgroundSpace img");
+        if (this.closing) return;
+        if (!image) {
+            // No planet: use the same readable fraction of the settled viewport.
+            await new Promise((resolve) => requestAnimationFrame(resolve));
+            if (this.closing || this._pan_started) return;
+            const viewport = root.getBoundingClientRect().height;
+            if (viewport > 0) {
+                root.style.setProperty(
+                    "--crawl-pan-distance",
+                    `${Math.round(viewport * NO_IMAGE_PAN_FRACTION)}px`
+                );
+            }
+            return;
+        }
+        if (typeof image.decode === "function") {
+            try {
+                await image.decode();
+            } catch {
+                /* decode can reject for a broken image; the fallback distance is fine */
+            }
+        }
+        if (this._pan_started || this.closing || !root.isConnected) return;
+
+        const space = root.querySelector(".backgroundSpace");
+        const viewport = root.getBoundingClientRect().height;
+        const image_box = image.getBoundingClientRect();
+        const bottom = Number.parseFloat(globalThis.getComputedStyle?.(image)?.bottom ?? "");
+        if (!(viewport > 0) || !(image_box.height > 0)) return;
+
+        const distance = reveal_distance({
+            container_height: space?.offsetHeight ?? 4200,
+            image_bottom: Number.isFinite(bottom) ? bottom : 0,
+            image_height: image_box.height,
+            viewport_height: viewport,
+        });
+        root.style.setProperty("--crawl-pan-distance", `${Math.round(distance)}px`);
+        log("opening-crawl", `pan distance ${Math.round(distance)}px`);
+    }
+
+    _start_effects() {
+        const root = this.root ?? this._root();
+        const effects = this.data.effects;
+        if (!root || !effects?.enabled || (!effects.particles && !effects.streaks)) return;
+        const canvas = root.querySelector(".crawl-effects-canvas");
+        if (!canvas) return;
+        this.effects?.destroy();
+        this.effects = new CrawlEffects(canvas, root, effects);
+        this.effects.start();
     }
 
     totalIntroSeconds() {
-        const crawl = this.fittedCrawlSeconds ?? crawl_scroll_seconds();
-        return (
-            opening_crawl_setting("opening-crawl-intro-text-delay") +
-            opening_crawl_setting("opening-crawl-intro-text-duration") +
-            opening_crawl_setting("opening-crawl-intro-crawl-delay") +
-            crawl +
-            opening_crawl_setting("opening-crawl-intro-pan-delay") +
-            opening_crawl_setting("opening-crawl-intro-pan-duration") +
-            opening_crawl_setting("opening-crawl-intro-close-delay")
-        );
+        const settings = intro_timing_settings();
+        if (this.fittedCrawlSeconds !== undefined) settings.crawlScroll = this.fittedCrawlSeconds;
+        return intro_schedule(settings).windowClose;
     }
 }
 
@@ -541,7 +747,6 @@ export function launch_opening_crawl(data) {
 
     data = foundry.utils.mergeObject(data, {
         type: "opening-crawl",
-        logo: game.settings.get("ffg-star-wars-enhancements", "opening-crawl-logo"),
         music: music,
         playlist: playlist,
         // only the launching client starts and stops the playlist
@@ -562,24 +767,27 @@ export function launch_opening_crawl(data) {
 async function socket_listener(data) {
     log("socket", data);
     if (data.type == "opening-crawl") {
-        // Preload audio before rendering the application to avoid timing issues
-        if (data.music && data.music.trim() !== "") {
-            log("opening-crawl", "preloading audio before render");
-            try {
-                const sound = await game.audio.preload(data.music);
-                data.sound = sound;
-                log("opening-crawl", "audio preloaded successfully");
-            } catch (error) {
-                log("opening-crawl", "error preloading audio: " + error);
-                data.sound = null;
-            }
-        }
-        
         // ApplicationV2.render() returns a Promise, not the app. Holding the
         // instance is what lets the timer close the window when the crawl ends.
         const crawl = new OpeningCrawlApplication(data);
+        // Preload in the background. Foundry waits for a user gesture before it
+        // loads audio, and a slow remote track can take many seconds; awaiting it
+        // here used to delay the crawl itself (or block it entirely when the
+        // audio context was still locked).
+        if (data.music && data.music.trim() !== "" && !is_remote_audio(data.music)) {
+            log("opening-crawl", "preloading audio in the background");
+            crawl.audioReady = Promise.resolve()
+                .then(() => game.audio.preload(data.music))
+                .catch((error) => {
+                    log("opening-crawl", "error preloading audio: " + error);
+                    return null;
+                });
+        }
         await crawl.render(true);
-        if (game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-close-delay") != 0) {
+        // The application schedules the reveal and close after it has measured the
+        // text. This fallback only runs when that scheduling could not happen, so a
+        // crawl never stays on screen forever because of a rendering problem.
+        if (!crawl.closeScheduled && opening_crawl_setting("opening-crawl-intro-close-delay") !== 0) {
             await sleep(crawl.totalIntroSeconds() * 1000);
             if (!crawl.closing) crawl.close();
         }
@@ -607,7 +815,7 @@ class OpeningCrawlSelectApplication extends HandlebarsApplicationMixin(Applicati
     async _prepareContext(options) {
         let folder = await get_journal_folder();
         let journals = folder.contents.map((journal) => {
-            const type = crawl_type_of(journal.getFlag?.("ffg-star-wars-enhancements", CRAWL_FLAG));
+            const type = crawl_type_of(journal.getFlag?.(MODULE_ID, CRAWL_FLAG));
             return {
                 id: journal.id ?? journal._id,
                 name: journal.name,
@@ -617,7 +825,7 @@ class OpeningCrawlSelectApplication extends HandlebarsApplicationMixin(Applicati
         });
 
         return {
-            types: crawl_type_choices(),
+            types: crawl_type_choices((key) => game.i18n.localize(key)),
             journals: journals,
         };
     }
@@ -707,6 +915,7 @@ export async function create_opening_crawl(typeId) {
     let data = {
         name: "Episode X",
         folder: folder.id,
+        flags: { [MODULE_ID]: { [CRAWL_FLAG]: type.id } },
         pages: [
             {
                 name: "Opening Crawl",
@@ -720,13 +929,28 @@ export async function create_opening_crawl(typeId) {
         ],
     };
     const journal = await JournalEntry.create(data);
-    await journal.setFlag("ffg-star-wars-enhancements", CRAWL_FLAG, type.id);
     journal.sheet.render(true);
 }
 
 function opening_crawl_setting(key) {
-    const value = Number(game.settings.get("ffg-star-wars-enhancements", key));
+    const value = Number(game.settings.get(MODULE_ID, key));
     return Number.isFinite(value) ? value : 0;
+}
+
+/** Raw timing settings, shaped for `intro_schedule`. */
+function intro_timing_settings() {
+    return {
+        textDelay: opening_crawl_setting("opening-crawl-intro-text-delay"),
+        textDuration: opening_crawl_setting("opening-crawl-intro-text-duration"),
+        crawlDelay: opening_crawl_setting("opening-crawl-intro-crawl-delay"),
+        crawlDuration: opening_crawl_setting("opening-crawl-intro-crawl-duration"),
+        crawlAdjust: opening_crawl_setting("opening-crawl-intro-crawl-duration-adjust"),
+        crawlSpeed: game.settings.get(MODULE_ID, "opening-crawl-intro-crawl-speed"),
+        panLead: opening_crawl_setting("opening-crawl-intro-pan-lead"),
+        panDelay: opening_crawl_setting("opening-crawl-intro-pan-delay"),
+        panDuration: opening_crawl_setting("opening-crawl-intro-pan-duration"),
+        closeDelay: opening_crawl_setting("opening-crawl-intro-close-delay"),
+    };
 }
 
 /**
@@ -734,10 +958,7 @@ function opening_crawl_setting(key) {
  * The close timer used to add the raw duration, so a speed below 1 closed the window while the text was still moving.
  */
 function crawl_scroll_seconds() {
-    const duration = opening_crawl_setting("opening-crawl-intro-crawl-duration");
-    const adjust = opening_crawl_setting("opening-crawl-intro-crawl-duration-adjust");
-    const speed = Number(game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-crawl-speed"));
-    return (duration + adjust) / (speed > 0 ? speed : 1);
+    return intro_schedule(intro_timing_settings()).crawlDuration;
 }
 
 /**
@@ -765,10 +986,7 @@ class opening_crawl_UISettings extends FormApplication {
     getData(options) {
         const gs = game.settings;
         const canConfigure = game.user.can("SETTINGS_MODIFY");
-
-        const data = {
-            system: { title: game.system.title, menus: [], settings: [] },
-        };
+        const settings = [];
 
         // Classify all settings
         // noinspection JSUnusedLocalSymbols
@@ -780,12 +998,13 @@ class opening_crawl_UISettings extends FormApplication {
             const s = foundry.utils.deepClone(setting);
             s.name = game.i18n.localize(s.name);
             s.hint = game.i18n.localize(s.hint);
-            s.value = game.settings.get(s.module, s.key);
+            s.value = game.settings.get(s.namespace ?? s.module ?? MODULE_ID, s.key);
             s.type = setting.type instanceof Function ? setting.type.name : "String";
             s.isCheckbox = setting.type === Boolean;
             s.isSelect = s.choices !== undefined;
-            s.isRange = setting.type === Number && s.range;
-            s.isFilePicker = setting.valueType === "FilePicker";
+            s.isRange = Boolean(setting.type === Number && s.range);
+            s.filePicker = FILE_PICKER_TYPES[s.key] ?? null;
+            s.group = SETTING_GROUPS[s.key] ?? "general";
             if (s.key === "opening-crawl-playlist") {
                 s.isSelect = true;
                 s.choices = {
@@ -793,10 +1012,25 @@ class opening_crawl_UISettings extends FormApplication {
                     ...Object.fromEntries(game.playlists.contents.map((p) => [p.id, p.name])),
                 };
             }
+            settings.push(s);
+        }
 
-            // Classify setting
-            const name = s.module;
-            if (s.key.includes("opening-crawl-")) data.system.settings.push(s);
+        settings.sort((a, b) => {
+            const a_index = SETTING_ORDER.indexOf(a.key);
+            const b_index = SETTING_ORDER.indexOf(b.key);
+            return (a_index < 0 ? Number.MAX_SAFE_INTEGER : a_index) - (b_index < 0 ? Number.MAX_SAFE_INTEGER : b_index);
+        });
+
+        // Mark the first setting of each group so the template can add a heading.
+        let group = null;
+        for (const setting of settings) {
+            if (setting.group !== group) {
+                setting.groupStart = true;
+                setting.groupLabel = game.i18n.localize(
+                    `ffg-star-wars-enhancements.opening-crawl.group-${setting.group}`
+                );
+                group = setting.group;
+            }
         }
 
         // Return data
@@ -804,7 +1038,9 @@ class opening_crawl_UISettings extends FormApplication {
             user: game.user,
             canConfigure: canConfigure,
             systemTitle: game.system.title,
-            data: data,
+            data: {
+                system: { title: game.system.title, menus: [], settings: settings },
+            },
         };
     }
 
@@ -812,7 +1048,7 @@ class opening_crawl_UISettings extends FormApplication {
         super.activateListeners(html);
         html.find(".submenu button").click(this._onClickSubmenu.bind(this));
         html.find('button[name="reset"]').click(this._onResetDefaults.bind(this));
-        html.find("button.filepicker").click(this._onFilePicker.bind(this));
+        html.find("button.file-picker").click(this._onFilePicker.bind(this));
     }
 
     /**
@@ -837,17 +1073,14 @@ class opening_crawl_UISettings extends FormApplication {
      */
     _onResetDefaults(event) {
         event.preventDefault();
-        const button = event.currentTarget;
-        const form = button.form;
-        for (let [k, v] of game.settings.settings.entries()) {
-            if (!v.config) {
-                let input = form[k];
-                if (input && input.type === "checkbox") {
-                    input.checked = v.default;
-                } else if (input) {
-                    input.value = v.default;
-                }
-            }
+        const form = event.currentTarget.form ?? this.form;
+        if (!form) return;
+        for (const [name, setting] of game.settings.settings.entries()) {
+            if (!SETTING_ORDER.includes(setting.key)) continue;
+            const input = form.elements.namedItem(name);
+            if (!input) continue;
+            if (input.type === "checkbox") input.checked = Boolean(setting.default);
+            else input.value = setting.default ?? "";
         }
     }
 
@@ -855,17 +1088,26 @@ class opening_crawl_UISettings extends FormApplication {
 
     _onFilePicker(event) {
         event.preventDefault();
+        const button = event.currentTarget;
+        const target = button.dataset.target;
+        const input = target ? this.form?.elements.namedItem(target) : button.closest(".form-fields")?.querySelector("input");
+        if (!input) return;
 
-        const fp = new FilePicker({
-            type: "image",
+        const Picker = foundry.applications?.apps?.FilePicker?.implementation ?? globalThis.FilePicker;
+        if (!Picker) {
+            ui.notifications.error("The file picker is unavailable in this Foundry version.");
+            return;
+        }
+        const picker = new Picker({
+            type: button.dataset.type || "image",
             callback: (path) => {
-                const input = event.currentTarget.previousElementSibling;
-                if (input) input.value = path;
+                input.value = path;
+                input.dispatchEvent(new Event("change", { bubbles: true }));
             },
-            top: this.position.top + 40,
-            left: this.position.left + 10,
+            top: (this.position?.top ?? 0) + 40,
+            left: (this.position?.left ?? 0) + 10,
         });
-        return fp.browse();
+        return picker.browse();
     }
 
     /* -------------------------------------------- */
@@ -873,12 +1115,26 @@ class opening_crawl_UISettings extends FormApplication {
     // noinspection JSUnusedGlobalSymbols
     /** @override */
     async _updateObject(event, formData) {
-        for (let [k, v] of Object.entries(foundry.utils.flattenObject(formData))) {
-            let s = game.settings.settings.get(k);
-            let current = game.settings.get(s.module, s.key);
-            if (v !== current) {
-                await game.settings.set(s.module, s.key, v);
+        const form = this.form ?? event.target;
+        if (!form) return;
+        for (const element of Array.from(form.elements)) {
+            if (!element.name) continue;
+            const setting = game.settings.settings.get(element.name);
+            if (!setting || !SETTING_ORDER.includes(setting.key)) continue;
+
+            let value;
+            if (element.type === "checkbox") {
+                value = element.checked;
+            } else if (setting.type === Number) {
+                value = Number(element.value);
+                if (!Number.isFinite(value)) continue;
+            } else {
+                value = element.value;
             }
+
+            const namespace = setting.namespace ?? setting.module ?? MODULE_ID;
+            const current = game.settings.get(namespace, setting.key);
+            if (value !== current) await game.settings.set(namespace, setting.key, value);
         }
     }
 }

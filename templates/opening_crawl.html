@@ -1,24 +1,35 @@
-<div class="ffg-star-wars-enhancements-opening-crawl crawl-type-{{crawlType}}">
+<div class="ffg-star-wars-enhancements-opening-crawl crawl-type-{{crawlType}}{{#if effectsClass}} {{effectsClass}}{{/if}}" data-crawl-type="{{crawlType}}" data-effects-kind="{{effects.kind}}">
     <style>
-        :root{
+        .ffg-star-wars-enhancements-opening-crawl {
             --intro-text-delay: {{intro_text_delay}}s; /* Time since start */
             --intro-text-duration: {{intro_text_duration}}s;
 
-            --intro-logo-delay: calc({{intro_logo_delay}}s + var(--intro-text-delay) + var(--intro-text-duration));  /* Time since intro text finished */
+            --intro-logo-delay: calc({{intro_logo_delay}}s + var(--intro-text-delay) + var(--intro-text-duration)); /* Time since intro text finished */
             --intro-logo-duration: {{intro_logo_duration}}s;
 
-            --intro-crawl-duration-adjust : {{intro_crawl_duration_adjust}}s; /* Can be used to shorten or increase the length of the crawl */
+            --intro-crawl-duration-adjust: {{intro_crawl_duration_adjust}}s; /* Can be used to shorten or increase the length of the crawl */
             --intro-crawl-delay: calc({{intro_crawl_delay}}s + var(--intro-text-delay) + var(--intro-text-duration)); /* Time since intro text finished */
             --intro-crawl-duration: calc(({{intro_crawl_duration}}s + var(--intro-crawl-duration-adjust)) / {{intro_crawl_speed}});
 
-            --intro-ending-delay: calc(({{intro_pan_delay}}s + var(--intro-crawl-duration) + var(--intro-crawl-delay))); /* Time since crawl finished */
+            /* The application overrides these after measuring the text and the image. */
+            --intro-ending-delay: calc({{intro_pan_delay}}s + var(--intro-crawl-duration) + var(--intro-crawl-delay));
             --intro-ending-duration: {{intro_pan_duration}}s;
+            --crawl-pan-distance: 55vh;
+
+            --crawl-effects-intensity: {{effects.intensity}};
+            --crawl-effects-particle: {{effects.particleColor}};
+            --crawl-effects-streak: {{effects.streakColor}};
         }
     </style>
     <div class="backgroundSpace">
         {{#if image}}
-        <img src="{{image}}" alt="" style="--crawl-image-bottom: {{img.bottom}}px; --crawl-image-nudge: {{img.right}}%;"/>
+        <img src="{{image}}" alt="" draggable="false" style="--crawl-image-bottom: {{img.bottom}}px; --crawl-image-nudge: {{img.right}}%;"/>
         {{/if}}
+    </div>
+    <div class="crawl-effects" aria-hidden="true">
+        <canvas class="crawl-effects-canvas"></canvas>
+        <div class="crawl-effects-scanlines"></div>
+        <div class="crawl-effects-vignette"></div>
     </div>
     <div class="animation">
         <div class="introBackground">
@@ -31,7 +42,7 @@
         <div class="verticalWrapper">
             <div class="logo noselect">
                 {{#if logo}}
-                <img class="logoDefault logoSub" src="{{logo}}" style="display: block;">
+                <img class="logoSub logoImage" src="{{logo}}" alt="" draggable="false" style="display: block;">
                 {{else}}
                 <div class="logoSub logoText">
                     {{#each wordmark as |line|}}
@@ -44,10 +55,10 @@
         <div class="titles noselect" style="font-size: {{size}}%;">
             <div>
                 <p class="episode tcenter">
-                    {{episode}}
+                    {{{episode_html}}}
                 </p>
-                <p class="title tcenter SWFont">
-                    {{title}}
+                <p class="title tcenter">
+                    {{{title_html}}}
                 </p>
                 <div class="text">
                     {{#each body as |text|}}

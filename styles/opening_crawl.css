@@ -25,62 +25,120 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
+/* -------------------------------------------------------------------------- */
+/* Fonts                                                                      */
+/* -------------------------------------------------------------------------- */
+
+/* News Cycle has a real bold face; loading both avoids the synthetic, smeared
+   bold the crawl used to get from a single 400 face. */
 @font-face {
     font-family: "News Cycle";
-    src: url("../fonts/NewsCycle-Regular.ttf");
+    src: url("../fonts/NewsCycle-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: block;
 }
+
+@font-face {
+    font-family: "News Cycle";
+    src: url("../fonts/NewsCycle-Bold.ttf") format("truetype");
+    font-weight: 700;
+    font-style: normal;
+    font-display: block;
+}
+
 @font-face {
     font-family: StarJedi;
-    src: url("../fonts/StarJedi-DGRW.woff");
+    src: url("../fonts/StarJedi-DGRW.woff") format("woff"),
+        url("../fonts/StarJedi-DGRW.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: block;
 }
 
+/* The film-title face. It only covers Latin glyphs; accented and Cyrillic
+   characters fall back to News Cycle per glyph. */
 @font-face {
     font-family: SWCrawlTitle;
-    src: url("../fonts/SWCrawlTitle.ttf");
+    src: url("../fonts/SWCrawlTitle.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: block;
 }
 
-@font-face {
-    font-family: SWCrawlBody;
-    src: url("../fonts/SWCrawlBody.ttf");
-}
+/* -------------------------------------------------------------------------- */
+/* Stage                                                                      */
+/* -------------------------------------------------------------------------- */
 
-:root {
-    --intro-background-duration: var(--intro-logo-delay);
+#ffg-star-wars-enhancements-opening-crawl .window-content {
+    padding: 0;
+    overflow: hidden;
+    background: #000;
 }
 
 .ffg-star-wars-enhancements-opening-crawl {
+    --crawl-gold: #ffd54e;
+    --crawl-body: "News Cycle", "Segoe UI", sans-serif;
+    --crawl-title: SWCrawlTitle, "News Cycle", serif;
+    --crawl-effects-tint: rgba(0, 0, 0, 0.62);
+    --logo-start-scale: 1.35;
     position: relative;
     margin: 0;
     width: 100%;
     height: 100%;
-    background: url("../artwork/stars.png") repeat;
-    background-color: #000;
-    color: #ffd54e;
     overflow: hidden;
-    letter-spacing: 0.15em;
-    font-weight: 700;
+    box-sizing: border-box;
+    container-type: inline-size;
+    background-color: #000;
+    background-image: url("../artwork/stars.png");
+    background-repeat: repeat;
+    color: var(--crawl-gold);
+    font-family: var(--crawl-body);
     font-size: 16px;
-    font-family: "News Cycle";
+    font-weight: 700;
     line-height: normal;
+    letter-spacing: 0.15em;
     font-variant-ligatures: none;
+}
+
+.ffg-star-wars-enhancements-opening-crawl .noselect {
+    user-select: none;
+}
+
+/* The plane that holds the logo and the text. It lifts and dims during the
+   pan, so the crawl recedes while the planet rises. */
+.ffg-star-wars-enhancements-opening-crawl .animation {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 100%;
+    transition: transform 1.6s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 1.2s ease;
+    /* Deliberately not promoted with will-change: the intro, wordmark and crawl
+       share this subtree, and a promoted layer could keep the finished intro
+       text painted into the crawl's texture. */
+}
+
+.ffg-star-wars-enhancements-opening-crawl.is-panning .animation {
+    transform: translateY(-7vh) scale(1.04);
+    opacity: 0.5;
 }
 
 .ffg-star-wars-enhancements-opening-crawl .verticalWrapper {
     position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
+    inset: 0;
     display: flex;
     align-items: center;
     width: 100%;
     height: 100%;
 }
 
+/* -------------------------------------------------------------------------- */
+/* "A long time ago..."                                                       */
+/* -------------------------------------------------------------------------- */
+
 .ffg-star-wars-enhancements-opening-crawl .introBackground {
     position: absolute;
-    top: 0;
-    left: 0;
+    inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -88,7 +146,7 @@
     height: 100%;
     background-color: #000;
     opacity: 0;
-    animation: introBackgroundAnimation var(--intro-background-duration);
+    animation: introBackgroundAnimation var(--intro-logo-delay) linear;
 }
 
 .ffg-star-wars-enhancements-opening-crawl .introBackground .intro {
@@ -97,79 +155,63 @@
     color: #4bd5ee;
     font-weight: 400;
     font-size: 450%;
+    text-align: center;
     opacity: 0;
     transform: scaleX(1.1);
     animation: introTextAnimation var(--intro-text-duration) ease-out var(--intro-text-delay);
 }
 
+/* -------------------------------------------------------------------------- */
+/* Wordmark                                                                   */
+/* -------------------------------------------------------------------------- */
+
 .ffg-star-wars-enhancements-opening-crawl .logo {
     position: static;
-    text-align: center;
-    font-family: StarJedi;
     margin: 0 auto;
+    text-align: center;
     opacity: 0;
-    transform: scale(2.2);
+    transform: scale(var(--logo-start-scale, 1.35));
+    transform-origin: center;
     animation: logoAnimation var(--intro-logo-duration) cubic-bezier(0.11, 0.6, 0.48, 0.88) var(--intro-logo-delay);
 }
 
 .ffg-star-wars-enhancements-opening-crawl .logo .logoSub {
-    width: 100%;
+    margin: 0 auto;
+}
+
+.ffg-star-wars-enhancements-opening-crawl .logo .logoImage {
+    display: block;
+    width: auto;
+    max-width: min(80cqw, 1400px);
+    max-height: 46vh;
+    object-fit: contain;
 }
 
 .ffg-star-wars-enhancements-opening-crawl .logo .logoText {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100%;
     color: #000;
-    text-shadow: rgb(255, 213, 78) -5px -5px 0px, rgb(255, 213, 78) -5px -4px 0px, rgb(255, 213, 78) -5px -3px 0px,
-        rgb(255, 213, 78) -5px -2px 0px, rgb(255, 213, 78) -5px -1px 0px, rgb(255, 213, 78) -5px 0px 0px,
-        rgb(255, 213, 78) -5px 1px 0px, rgb(255, 213, 78) -5px 2px 0px, rgb(255, 213, 78) -5px 3px 0px,
-        rgb(255, 213, 78) -5px 4px 0px, rgb(255, 213, 78) -5px 5px 0px, rgb(255, 213, 78) -4px -5px 0px,
-        rgb(255, 213, 78) -4px -4px 0px, rgb(255, 213, 78) -4px -3px 0px, rgb(255, 213, 78) -4px -2px 0px,
-        rgb(255, 213, 78) -4px -1px 0px, rgb(255, 213, 78) -4px 0px 0px, rgb(255, 213, 78) -4px 1px 0px,
-        rgb(255, 213, 78) -4px 2px 0px, rgb(255, 213, 78) -4px 3px 0px, rgb(255, 213, 78) -4px 4px 0px,
-        rgb(255, 213, 78) -4px 5px 0px, rgb(255, 213, 78) -3px -5px 0px, rgb(255, 213, 78) -3px -4px 0px,
-        rgb(255, 213, 78) -3px -3px 0px, rgb(255, 213, 78) -3px -2px 0px, rgb(255, 213, 78) -3px -1px 0px,
-        rgb(255, 213, 78) -3px 0px 0px, rgb(255, 213, 78) -3px 1px 0px, rgb(255, 213, 78) -3px 2px 0px,
-        rgb(255, 213, 78) -3px 3px 0px, rgb(255, 213, 78) -3px 4px 0px, rgb(255, 213, 78) -3px 5px 0px,
-        rgb(255, 213, 78) -2px -5px 0px, rgb(255, 213, 78) -2px -4px 0px, rgb(255, 213, 78) -2px -3px 0px,
-        rgb(255, 213, 78) -2px -2px 0px, rgb(255, 213, 78) -2px -1px 0px, rgb(255, 213, 78) -2px 0px 0px,
-        rgb(255, 213, 78) -2px 1px 0px, rgb(255, 213, 78) -2px 2px 0px, rgb(255, 213, 78) -2px 3px 0px,
-        rgb(255, 213, 78) -2px 4px 0px, rgb(255, 213, 78) -2px 5px 0px, rgb(255, 213, 78) -1px -5px 0px,
-        rgb(255, 213, 78) -1px -4px 0px, rgb(255, 213, 78) -1px -3px 0px, rgb(255, 213, 78) -1px -2px 0px,
-        rgb(255, 213, 78) -1px -1px 0px, rgb(255, 213, 78) -1px 0px 0px, rgb(255, 213, 78) -1px 1px 0px,
-        rgb(255, 213, 78) -1px 2px 0px, rgb(255, 213, 78) -1px 3px 0px, rgb(255, 213, 78) -1px 4px 0px,
-        rgb(255, 213, 78) -1px 5px 0px, rgb(255, 213, 78) 0px -5px 0px, rgb(255, 213, 78) 0px -4px 0px,
-        rgb(255, 213, 78) 0px -3px 0px, rgb(255, 213, 78) 0px -2px 0px, rgb(255, 213, 78) 0px -1px 0px,
-        rgb(255, 213, 78) 0px 0px 0px, rgb(255, 213, 78) 0px 1px 0px, rgb(255, 213, 78) 0px 2px 0px,
-        rgb(255, 213, 78) 0px 3px 0px, rgb(255, 213, 78) 0px 4px 0px, rgb(255, 213, 78) 0px 5px 0px,
-        rgb(255, 213, 78) 1px -5px 0px, rgb(255, 213, 78) 1px -4px 0px, rgb(255, 213, 78) 1px -3px 0px,
-        rgb(255, 213, 78) 1px -2px 0px, rgb(255, 213, 78) 1px -1px 0px, rgb(255, 213, 78) 1px 0px 0px,
-        rgb(255, 213, 78) 1px 1px 0px, rgb(255, 213, 78) 1px 2px 0px, rgb(255, 213, 78) 1px 3px 0px,
-        rgb(255, 213, 78) 1px 4px 0px, rgb(255, 213, 78) 1px 5px 0px, rgb(255, 213, 78) 2px -5px 0px,
-        rgb(255, 213, 78) 2px -4px 0px, rgb(255, 213, 78) 2px -3px 0px, rgb(255, 213, 78) 2px -2px 0px,
-        rgb(255, 213, 78) 2px -1px 0px, rgb(255, 213, 78) 2px 0px 0px, rgb(255, 213, 78) 2px 1px 0px,
-        rgb(255, 213, 78) 2px 2px 0px, rgb(255, 213, 78) 2px 3px 0px, rgb(255, 213, 78) 2px 4px 0px,
-        rgb(255, 213, 78) 2px 5px 0px, rgb(255, 213, 78) 3px -5px 0px, rgb(255, 213, 78) 3px -4px 0px,
-        rgb(255, 213, 78) 3px -3px 0px, rgb(255, 213, 78) 3px -2px 0px, rgb(255, 213, 78) 3px -1px 0px,
-        rgb(255, 213, 78) 3px 0px 0px, rgb(255, 213, 78) 3px 1px 0px, rgb(255, 213, 78) 3px 2px 0px,
-        rgb(255, 213, 78) 3px 3px 0px, rgb(255, 213, 78) 3px 4px 0px, rgb(255, 213, 78) 3px 5px 0px,
-        rgb(255, 213, 78) 4px -5px 0px, rgb(255, 213, 78) 4px -4px 0px, rgb(255, 213, 78) 4px -3px 0px,
-        rgb(255, 213, 78) 4px -2px 0px, rgb(255, 213, 78) 4px -1px 0px, rgb(255, 213, 78) 4px 0px 0px,
-        rgb(255, 213, 78) 4px 1px 0px, rgb(255, 213, 78) 4px 2px 0px, rgb(255, 213, 78) 4px 3px 0px,
-        rgb(255, 213, 78) 4px 4px 0px, rgb(255, 213, 78) 4px 5px 0px, rgb(255, 213, 78) 5px -5px 0px,
-        rgb(255, 213, 78) 5px -4px 0px, rgb(255, 213, 78) 5px -3px 0px, rgb(255, 213, 78) 5px -2px 0px,
-        rgb(255, 213, 78) 5px -1px 0px, rgb(255, 213, 78) 5px 0px 0px, rgb(255, 213, 78) 5px 1px 0px,
-        rgb(255, 213, 78) 5px 2px 0px, rgb(255, 213, 78) 5px 3px 0px, rgb(255, 213, 78) 5px 4px 0px,
-        rgb(255, 213, 78) 5px 5px 0px;
-    font-size: 200px;
-    line-height: 86%;
+    font-family: StarJedi, "News Cycle", sans-serif;
+    font-size: 200px; /* fallback for browsers without container units */
+    font-size: min(24cqw, 34vh);
+    line-height: 0.86;
     letter-spacing: normal;
+    /* One clean outline instead of the 121 text-shadow offsets: the outer half
+       of the stroke is exactly the old 5px ring at 200px. */
+    -webkit-text-stroke: 0.05em var(--crawl-gold);
+    paint-order: stroke fill;
+    text-shadow: 0 0 2.2cqw rgba(255, 213, 78, 0.18);
 }
 
 .ffg-star-wars-enhancements-opening-crawl .logo .logoText div {
     white-space: nowrap;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Crawl text                                                                 */
+/* -------------------------------------------------------------------------- */
 
 .ffg-star-wars-enhancements-opening-crawl .titles {
     position: absolute;
@@ -177,9 +219,13 @@
     bottom: 0;
     left: 50%;
     overflow: hidden;
-    margin: 0 0 0 -7.325em;
-    width: 14.65em;
+    /* 14.65em was too narrow at the default 350% text size: four-word lines
+       were stretched apart by justification and long episode lines wrapped
+       into three pieces. 21em keeps the film's column proportion and fits a
+       normal episode line; 82vw keeps it inside smaller windows. */
+    width: min(21em, 82vw);
     height: 50em;
+    margin: 0 0 0 max(-10.5em, -41vw);
     text-align: justify;
     word-wrap: break-word;
     transform-origin: 50% 100%;
@@ -190,6 +236,11 @@
     position: absolute;
     top: 100%;
     width: 100%;
+    /* Hidden until the crawl's delay elapses. The 3D tilt on .titles can
+       project the first line's ascenders into view while top:100% is still
+       below the viewport, which looked like a stray crawl line during the
+       logo. The animation's 0% keyframe restores opacity 1 when it starts. */
+    opacity: 0;
     animation: titlesAnimation var(--intro-crawl-duration) linear var(--intro-crawl-delay) forwards;
 }
 
@@ -203,27 +254,40 @@
     text-align: center;
 }
 
-.ffg-star-wars-enhancements-opening-crawl .titles > div .episode {
-    margin: 0 0 1.6em;
+/* Episode and title share the film-title face. The episode keeps its natural
+   casing ("Episode IV"); only the title is uppercased. */
+.ffg-star-wars-enhancements-opening-crawl .titles .episode {
+    margin: 0 0 1.2em;
+    font-family: var(--crawl-title);
+    font-weight: 400;
+    font-size: 100%;
+    line-height: 1.05;
+    letter-spacing: 0.06em;
 }
 
-.ffg-star-wars-enhancements-opening-crawl .titles > div .title {
-    margin: 0 0 2.2em;
+.ffg-star-wars-enhancements-opening-crawl .titles .title {
+    margin: 0 0 1.8em;
     transform: none;
-    text-transform: uppercase;
-}
-
-.ffg-star-wars-enhancements-opening-crawl .titles > div .SWFont {
-    margin: 0 0 2.2em;
-    transform: none;
-    font-weight: normal;
-    font-size: 210%;
-    font-family: SWCrawlTitle;
+    font-family: var(--crawl-title);
+    font-weight: 400;
+    font-size: 175%;
+    line-height: 1.05;
     letter-spacing: 0.04em;
-    text-transform: lowercase;
+    /* The title is uppercased in JS: CSS uppercasing would turn the font's
+       normal lowercase-s/l substitutes back into its logo and crawl-text
+       glyphs. */
+    text-transform: none;
+}
+
+/* SWCrawlTitle's "1" has a wide side bearing, so 10 reads as "1 0" at the
+   title size. The span only wraps digits; pull them back to a normal gap. */
+.ffg-star-wars-enhancements-opening-crawl .titles .crawl-num {
+    letter-spacing: -0.5em;
 }
 
 .ffg-star-wars-enhancements-opening-crawl .titles > div .text {
+    font-family: var(--crawl-body);
+    font-weight: 700;
     line-height: 1.7em;
     letter-spacing: 0.04em;
     word-spacing: normal;
@@ -235,21 +299,20 @@
     text-align-last: start;
 }
 
+/* -------------------------------------------------------------------------- */
+/* Starfield and the planet reveal                                            */
+/* -------------------------------------------------------------------------- */
+
 .ffg-star-wars-enhancements-opening-crawl .backgroundSpace {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 4200px;
-    background: url("../artwork/stars.png") repeat;
-}
-
-.ffg-star-wars-enhancements-opening-crawl {
-    display: initial;
-}
-
-.ffg-star-wars-enhancements-opening-crawl .backgroundSpace {
-    animation: scrolldown var(--intro-ending-duration) var(--intro-ending-delay) forwards;
+    background-image: url("../artwork/stars.png");
+    background-repeat: repeat;
+    animation: scrolldown var(--intro-ending-duration) cubic-bezier(0.22, 0.61, 0.36, 1) var(--intro-ending-delay)
+        forwards;
 }
 
 .ffg-star-wars-enhancements-opening-crawl .backgroundSpace img {
@@ -257,7 +320,7 @@
     left: calc(50% - var(--crawl-image-nudge, 0%));
     right: auto;
     bottom: var(--crawl-image-bottom, 1300px);
-    width: min(36vw, 520px);
+    width: min(40vw, 620px);
     max-width: none;
     height: auto;
     transform: translateX(-50%);
@@ -270,358 +333,262 @@
     animation-play-state: paused;
 }
 
-@-moz-keyframes introTextAnimation {
-    0% {
-        opacity: 0;
-    }
+/* -------------------------------------------------------------------------- */
+/* Atmosphere                                                                 */
+/* -------------------------------------------------------------------------- */
 
-    20% {
-        opacity: 1;
-    }
-
-    90% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 0;
-    }
+.ffg-star-wars-enhancements-opening-crawl .crawl-effects {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
 }
 
-@-webkit-keyframes introTextAnimation {
-    0% {
-        opacity: 0;
-    }
-
-    20% {
-        opacity: 1;
-    }
-
-    90% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 0;
-    }
+.ffg-star-wars-enhancements-opening-crawl .crawl-effects-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.8s ease;
 }
 
-@-o-keyframes introTextAnimation {
-    0% {
-        opacity: 0;
-    }
-
-    20% {
-        opacity: 1;
-    }
-
-    90% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 0;
-    }
+.ffg-star-wars-enhancements-opening-crawl.crawl-effects-particles .crawl-effects-canvas,
+.ffg-star-wars-enhancements-opening-crawl.crawl-effects-streaks .crawl-effects-canvas {
+    opacity: 1;
 }
 
-@-moz-keyframes introBackgroundAnimation {
-    0% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 1;
-    }
+.ffg-star-wars-enhancements-opening-crawl .crawl-effects-scanlines,
+.ffg-star-wars-enhancements-opening-crawl .crawl-effects-vignette {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    pointer-events: none;
 }
 
-@-webkit-keyframes introBackgroundAnimation {
-    0% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 1;
-    }
+.ffg-star-wars-enhancements-opening-crawl .crawl-effects-scanlines {
+    background: repeating-linear-gradient(
+        to bottom,
+        rgba(120, 210, 255, 0.12) 0,
+        rgba(120, 210, 255, 0.12) 1px,
+        transparent 2px,
+        transparent 5px
+    );
+    mix-blend-mode: screen;
+    animation: scanlineDrift 9s linear infinite;
 }
 
-@-o-keyframes introBackgroundAnimation {
-    0% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 1;
-    }
+.ffg-star-wars-enhancements-opening-crawl .crawl-effects-vignette {
+    background: radial-gradient(ellipse at 50% 45%, transparent 40%, var(--crawl-effects-tint) 100%);
 }
 
-@-moz-keyframes logoAnimation {
-    0% {
-        transform: scale(2.2);
-        opacity: 1;
-    }
-
-    95% {
-        opacity: 1;
-    }
-
-    100% {
-        transform: scale(0.01);
-        opacity: 0;
-    }
+.ffg-star-wars-enhancements-opening-crawl.crawl-effects-scanlines-on .crawl-effects-scanlines {
+    opacity: calc(var(--crawl-effects-intensity, 0.6) * 0.55);
 }
 
-@-webkit-keyframes logoAnimation {
-    0% {
-        transform: scale(2.2);
-        opacity: 1;
-    }
-
-    95% {
-        opacity: 1;
-    }
-
-    100% {
-        transform: scale(0.01);
-        opacity: 0;
-    }
+.ffg-star-wars-enhancements-opening-crawl.crawl-effects-vignette-on .crawl-effects-vignette {
+    opacity: calc(0.35 + var(--crawl-effects-intensity, 0.6) * 0.5);
 }
 
-@-o-keyframes logoAnimation {
-    0% {
-        transform: scale(2.2);
-        opacity: 1;
-    }
+/* -------------------------------------------------------------------------- */
+/* Clone Wars                                                                 */
+/* -------------------------------------------------------------------------- */
 
-    95% {
-        opacity: 1;
-    }
-
-    100% {
-        transform: scale(0.01);
-        opacity: 0;
-    }
+.ffg-star-wars-enhancements-opening-crawl.crawl-type-clone-wars {
+    --crawl-gold: #8fd8ff;
+    --crawl-effects-tint: rgba(0, 24, 58, 0.7);
+    --logo-start-scale: 1.45;
+    color: #8fd8ff;
+    background-color: #02060c;
 }
 
-@-moz-keyframes titlesAnimation {
-    0% {
-        top: 100%;
-        transform: translateY(0);
-        opacity: 1;
-    }
-
-    95% {
-        top: 5%;
-        transform: translateY(-95%);
-        opacity: 1;
-    }
-
-    100% {
-        top: 0;
-        /* -100% is the text block's own height, so the last line clears the window.
-           A fixed percentage of the crawl window ended the scroll while longer text was still below it. */
-        transform: translateY(-100%);
-        opacity: 0;
-    }
+.ffg-star-wars-enhancements-opening-crawl.crawl-type-clone-wars .backgroundSpace {
+    background-image: radial-gradient(ellipse at 50% 40%, rgba(16, 56, 110, 0.55), rgba(0, 0, 0, 0.12) 48%, rgba(0, 8, 24, 0.72)),
+        url("../artwork/stars.png");
+    background-repeat: no-repeat, repeat;
 }
 
-@-webkit-keyframes titlesAnimation {
-    0% {
-        top: 100%;
-        transform: translateY(0);
-        opacity: 1;
-    }
-
-    95% {
-        top: 5%;
-        transform: translateY(-95%);
-        opacity: 1;
-    }
-
-    100% {
-        top: 0;
-        /* -100% is the text block's own height, so the last line clears the window.
-           A fixed percentage of the crawl window ended the scroll while longer text was still below it. */
-        transform: translateY(-100%);
-        opacity: 0;
-    }
+.ffg-star-wars-enhancements-opening-crawl.crawl-type-clone-wars .introBackground .intro {
+    color: #bfe9ff;
+    font-size: 340%;
 }
 
-@-o-keyframes titlesAnimation {
-    0% {
-        top: 100%;
-        transform: translateY(0);
-        opacity: 1;
-    }
-
-    95% {
-        top: 5%;
-        transform: translateY(-95%);
-        opacity: 1;
-    }
-
-    100% {
-        top: 0;
-        /* -100% is the text block's own height, so the last line clears the window.
-           A fixed percentage of the crawl window ended the scroll while longer text was still below it. */
-        transform: translateY(-100%);
-        opacity: 0;
-    }
+.ffg-star-wars-enhancements-opening-crawl.crawl-type-clone-wars .logo .logoText {
+    /* The series logo is blue lettering with a pale keyline rather than the
+       saga's black fill, so fill the StarJedi glyphs with a blue gradient and
+       use the stroke as the highlight. */
+    background: linear-gradient(180deg, #eaf9ff 0%, #8fd8ff 42%, #2f86b8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-family: StarJedi, "News Cycle", sans-serif;
+    font-size: min(18cqw, 27vh);
+    font-weight: 400;
+    letter-spacing: normal;
+    line-height: 0.86;
+    -webkit-text-stroke: 0.035em #bfeaff;
+    paint-order: stroke fill;
+    filter: drop-shadow(0 0 0.045em rgba(78, 182, 232, 0.95));
 }
 
-@-moz-keyframes scrolldown {
-    0% {
-        transform: translateY(0);
-    }
-
-    100% {
-        transform: translateY(-2200px);
-    }
+.ffg-star-wars-enhancements-opening-crawl.crawl-type-clone-wars .titles {
+    text-align: center;
+    transform: perspective(500px) rotateX(12deg);
 }
 
-@-webkit-keyframes scrolldown {
-    0% {
-        transform: translateY(0);
-    }
-
-    100% {
-        transform: translateY(-2200px);
-    }
+.ffg-star-wars-enhancements-opening-crawl.crawl-type-clone-wars .titles > div .text,
+.ffg-star-wars-enhancements-opening-crawl.crawl-type-clone-wars .titles > div .text p {
+    text-align: center;
+    text-align-last: center;
 }
 
-@-o-keyframes scrolldown {
-    0% {
-        transform: translateY(0);
-    }
+/* -------------------------------------------------------------------------- */
+/* Criminal Empire — Crimson Dawn                                             */
+/* -------------------------------------------------------------------------- */
 
-    100% {
-        transform: translateY(-2200px);
-    }
+.ffg-star-wars-enhancements-opening-crawl.crawl-type-criminal-empire {
+    --crawl-gold: #ffcf6b;
+    --crawl-effects-tint: rgba(58, 3, 12, 0.76);
+    color: #ffcf6b;
+    background-color: #080306;
 }
 
-@-moz-keyframes fadeinAnimation {
-    from {
-        visibility: hidden;
-        opacity: 0;
-    }
-
-    to {
-        visibility: visible;
-        opacity: 1;
-    }
+.ffg-star-wars-enhancements-opening-crawl.crawl-type-criminal-empire .backgroundSpace {
+    background-image: radial-gradient(ellipse at 50% 42%, rgba(120, 16, 34, 0.4), transparent 56%),
+        url("../artwork/stars.png");
+    background-repeat: no-repeat, repeat;
 }
 
-@-webkit-keyframes fadeinAnimation {
-    from {
-        visibility: hidden;
-        opacity: 0;
-    }
-
-    to {
-        visibility: visible;
-        opacity: 1;
-    }
+.ffg-star-wars-enhancements-opening-crawl.crawl-type-criminal-empire .introBackground .intro {
+    color: #ffb27a;
+    font-size: 380%;
 }
 
-@-o-keyframes fadeinAnimation {
-    from {
-        visibility: hidden;
-        opacity: 0;
-    }
-
-    to {
-        visibility: visible;
-        opacity: 1;
-    }
+.ffg-star-wars-enhancements-opening-crawl.crawl-type-criminal-empire .logo .logoText {
+    color: #ffd166;
+    font-family: SWCrawlTitle, "News Cycle", serif;
+    font-size: min(9cqw, 16vh);
+    letter-spacing: 0.08em;
+    line-height: 0.95;
+    -webkit-text-stroke: 0.035em #8e1428;
+    paint-order: stroke fill;
+    text-shadow: 0 0 0.04em rgba(165, 28, 48, 0.9), 0 0 4cqw rgba(165, 28, 48, 0.55);
 }
 
-@-moz-keyframes fadeoutAnimation {
-    from {
-        visibility: visible;
-        opacity: 1;
-    }
-
-    to {
-        visibility: hidden;
-        opacity: 0;
-    }
+.ffg-star-wars-enhancements-opening-crawl.crawl-type-criminal-empire .titles .title {
+    color: #ffe0a1;
 }
 
-@-webkit-keyframes fadeoutAnimation {
-    from {
-        visibility: visible;
-        opacity: 1;
-    }
+/* -------------------------------------------------------------------------- */
+/* Creator type cards                                                         */
+/* -------------------------------------------------------------------------- */
 
-    to {
-        visibility: hidden;
-        opacity: 0;
-    }
+.opening-crawl-type-fieldset {
+    margin: 0 0 1em;
+    padding: 0;
+    border: 0;
 }
 
-@-o-keyframes fadeoutAnimation {
-    from {
-        visibility: visible;
-        opacity: 1;
-    }
-
-    to {
-        visibility: hidden;
-        opacity: 0;
-    }
-}
-@-moz-keyframes introTextAnimation {
-    0% {
-        opacity: 0;
-    }
-
-    20% {
-        opacity: 1;
-    }
-
-    90% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 0;
-    }
+.opening-crawl-type-fieldset > legend {
+    margin-bottom: 0.4em;
+    padding: 0;
+    font-weight: 700;
 }
 
-@-webkit-keyframes introTextAnimation {
-    0% {
-        opacity: 0;
-    }
-
-    20% {
-        opacity: 1;
-    }
-
-    90% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 0;
-    }
+.opening-crawl-type-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 0.6em;
 }
 
-@-o-keyframes introTextAnimation {
-    0% {
-        opacity: 0;
-    }
-
-    20% {
-        opacity: 1;
-    }
-
-    90% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 0;
-    }
+.opening-crawl-type-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+        "chip name"
+        "desc desc";
+    gap: 0.35em 0.55em;
+    align-items: center;
+    padding: 0.65em 0.75em;
+    border: 1px solid var(--color-border-light-primary, #7a7974);
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.18);
+    cursor: pointer;
 }
+
+.opening-crawl-type-card:hover {
+    border-color: var(--color-border-highlight, #ff6400);
+}
+
+.opening-crawl-type-card:focus-within {
+    outline: 2px solid var(--color-border-highlight, #ff6400);
+    outline-offset: 1px;
+}
+
+.opening-crawl-type-card:has(input:checked) {
+    border-color: #ffd54e;
+    box-shadow: inset 0 0 0 1px #ffd54e;
+}
+
+.opening-crawl-type-card input[type="radio"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.opening-crawl-type-chip {
+    grid-area: chip;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #ffd54e;
+    box-shadow: 0 0 8px currentColor;
+}
+
+.opening-crawl-type-name {
+    grid-area: name;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.opening-crawl-type-description {
+    grid-area: desc;
+    font-size: 0.85em;
+    line-height: 1.3;
+    opacity: 0.8;
+}
+
+.crawl-theme-clone-wars .opening-crawl-type-chip {
+    color: #8fd8ff;
+    background: #8fd8ff;
+}
+
+.crawl-theme-criminal-empire .opening-crawl-type-chip {
+    color: #ff6b57;
+    background: #ff6b57;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Settings groups                                                            */
+/* -------------------------------------------------------------------------- */
+
+.settings-group-header {
+    margin: 1.25em 0 0.35em;
+    padding-bottom: 0.25em;
+    border-bottom: 1px solid var(--color-border-light-primary, #7a7974);
+    font-size: 1.05em;
+}
+
+.settings-group-header:first-child {
+    margin-top: 0;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Keyframes                                                                  */
+/* -------------------------------------------------------------------------- */
 
 @keyframes introTextAnimation {
     0% {
@@ -641,36 +608,6 @@
     }
 }
 
-@-moz-keyframes introBackgroundAnimation {
-    0% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 1;
-    }
-}
-
-@-webkit-keyframes introBackgroundAnimation {
-    0% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 1;
-    }
-}
-
-@-o-keyframes introBackgroundAnimation {
-    0% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 1;
-    }
-}
-
 @keyframes introBackgroundAnimation {
     0% {
         opacity: 1;
@@ -681,57 +618,9 @@
     }
 }
 
-@-moz-keyframes logoAnimation {
-    0% {
-        transform: scale(2.2);
-        opacity: 1;
-    }
-
-    95% {
-        opacity: 1;
-    }
-
-    100% {
-        transform: scale(0.01);
-        opacity: 0;
-    }
-}
-
-@-webkit-keyframes logoAnimation {
-    0% {
-        transform: scale(2.2);
-        opacity: 1;
-    }
-
-    95% {
-        opacity: 1;
-    }
-
-    100% {
-        transform: scale(0.01);
-        opacity: 0;
-    }
-}
-
-@-o-keyframes logoAnimation {
-    0% {
-        transform: scale(2.2);
-        opacity: 1;
-    }
-
-    95% {
-        opacity: 1;
-    }
-
-    100% {
-        transform: scale(0.01);
-        opacity: 0;
-    }
-}
-
 @keyframes logoAnimation {
     0% {
-        transform: scale(2.2);
+        transform: scale(var(--logo-start-scale, 1.35));
         opacity: 1;
     }
 
@@ -741,72 +630,6 @@
 
     100% {
         transform: scale(0.01);
-        opacity: 0;
-    }
-}
-
-@-moz-keyframes titlesAnimation {
-    0% {
-        top: 100%;
-        transform: translateY(0);
-        opacity: 1;
-    }
-
-    95% {
-        top: 5%;
-        transform: translateY(-95%);
-        opacity: 1;
-    }
-
-    100% {
-        top: 0;
-        /* -100% is the text block's own height, so the last line clears the window.
-           A fixed percentage of the crawl window ended the scroll while longer text was still below it. */
-        transform: translateY(-100%);
-        opacity: 0;
-    }
-}
-
-@-webkit-keyframes titlesAnimation {
-    0% {
-        top: 100%;
-        transform: translateY(0);
-        opacity: 1;
-    }
-
-    95% {
-        top: 5%;
-        transform: translateY(-95%);
-        opacity: 1;
-    }
-
-    100% {
-        top: 0;
-        /* -100% is the text block's own height, so the last line clears the window.
-           A fixed percentage of the crawl window ended the scroll while longer text was still below it. */
-        transform: translateY(-100%);
-        opacity: 0;
-    }
-}
-
-@-o-keyframes titlesAnimation {
-    0% {
-        top: 100%;
-        transform: translateY(0);
-        opacity: 1;
-    }
-
-    95% {
-        top: 5%;
-        transform: translateY(-95%);
-        opacity: 1;
-    }
-
-    100% {
-        top: 0;
-        /* -100% is the text block's own height, so the last line clears the window.
-           A fixed percentage of the crawl window ended the scroll while longer text was still below it. */
-        transform: translateY(-100%);
         opacity: 0;
     }
 }
@@ -833,180 +656,42 @@
     }
 }
 
-@-moz-keyframes scrolldown {
-    0% {
-        transform: translateY(0);
-    }
-
-    100% {
-        transform: translateY(-2200px);
-    }
-}
-
-@-webkit-keyframes scrolldown {
-    0% {
-        transform: translateY(0);
-    }
-
-    100% {
-        transform: translateY(-2200px);
-    }
-}
-
-@-o-keyframes scrolldown {
-    0% {
-        transform: translateY(0);
-    }
-
-    100% {
-        transform: translateY(-2200px);
-    }
-}
-
 @keyframes scrolldown {
     0% {
         transform: translateY(0);
     }
 
     100% {
-        transform: translateY(-2200px);
-    }
-}
-@-moz-keyframes fadeinAnimation {
-    from {
-        visibility: hidden;
-        opacity: 0;
-    }
-
-    to {
-        visibility: visible;
-        opacity: 1;
+        transform: translateY(calc(-1 * var(--crawl-pan-distance, 55vh)));
     }
 }
 
-@-webkit-keyframes fadeinAnimation {
-    from {
-        visibility: hidden;
-        opacity: 0;
+@keyframes scanlineDrift {
+    0% {
+        background-position: 0 0;
     }
 
-    to {
-        visibility: visible;
-        opacity: 1;
+    100% {
+        background-position: 0 35px;
     }
 }
 
-@-o-keyframes fadeinAnimation {
-    from {
-        visibility: hidden;
-        opacity: 0;
+/* -------------------------------------------------------------------------- */
+/* Reduced motion                                                             */
+/* -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    .ffg-star-wars-enhancements-opening-crawl .crawl-effects-canvas,
+    .ffg-star-wars-enhancements-opening-crawl .crawl-effects-scanlines {
+        display: none;
     }
 
-    to {
-        visibility: visible;
-        opacity: 1;
-    }
-}
-
-@keyframes fadeinAnimation {
-    from {
-        visibility: hidden;
-        opacity: 0;
+    .ffg-star-wars-enhancements-opening-crawl .animation {
+        transition: none;
     }
 
-    to {
-        visibility: visible;
-        opacity: 1;
+    .ffg-star-wars-enhancements-opening-crawl.is-panning .animation {
+        transform: none;
+        opacity: 0.75;
     }
-}
-
-@-moz-keyframes fadeoutAnimation {
-    from {
-        visibility: visible;
-        opacity: 1;
-    }
-
-    to {
-        visibility: hidden;
-        opacity: 0;
-    }
-}
-
-@-webkit-keyframes fadeoutAnimation {
-    from {
-        visibility: visible;
-        opacity: 1;
-    }
-
-    to {
-        visibility: hidden;
-        opacity: 0;
-    }
-}
-
-@-o-keyframes fadeoutAnimation {
-    from {
-        visibility: visible;
-        opacity: 1;
-    }
-
-    to {
-        visibility: hidden;
-        opacity: 0;
-    }
-}
-
-@keyframes fadeoutAnimation {
-    from {
-        visibility: visible;
-        opacity: 1;
-    }
-
-    to {
-        visibility: hidden;
-        opacity: 0;
-    }
-}
-
-/* Clone Wars: flatter blue crawl and a blue vignette. The saga type keeps the rules above. */
-.ffg-star-wars-enhancements-opening-crawl.crawl-type-clone-wars {
-    color: #7ecfff;
-    background-color: #02060c;
-}
-
-.ffg-star-wars-enhancements-opening-crawl.crawl-type-clone-wars .backgroundSpace {
-    background:
-        radial-gradient(ellipse at 50% 40%, rgba(16, 56, 110, 0.55), rgba(0, 0, 0, 0.12) 48%, rgba(0, 8, 24, 0.72)),
-        url("../artwork/stars.png") repeat;
-}
-
-.ffg-star-wars-enhancements-opening-crawl.crawl-type-clone-wars .introBackground .intro {
-    color: #9fd6ff;
-    font-size: 320%;
-    text-align: center;
-}
-
-.ffg-star-wars-enhancements-opening-crawl.crawl-type-clone-wars .logo,
-.ffg-star-wars-enhancements-opening-crawl.crawl-type-clone-wars .logo .logoText {
-    color: #061018;
-    font-family: "News Cycle", sans-serif;
-    font-size: 120px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    line-height: 0.9;
-    gap: 0.15em;
-    text-shadow: none;
-    -webkit-text-stroke: 3px #4eb6e8;
-    paint-order: stroke fill;
-}
-
-.ffg-star-wars-enhancements-opening-crawl.crawl-type-clone-wars .titles {
-    text-align: center;
-    transform: perspective(400px) rotateX(12deg);
-}
-
-.ffg-star-wars-enhancements-opening-crawl.crawl-type-clone-wars .titles > div .text,
-.ffg-star-wars-enhancements-opening-crawl.crawl-type-clone-wars .titles > div .text p {
-    text-align: center;
-    text-align-last: center;
 }
