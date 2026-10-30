@@ -1,4 +1,22 @@
 
+`4.3.0`
+
+- REspec roster: player-assigned characters are listed automatically, and any other character sheet can be added from the Characters panel. Added sheets persist in a world setting, can be removed from their roster chip, and appear in cards, Pull chat, awards, Apply all, End session, and `getCharacters`.
+- Opening Crawl: the pan to the planet can begin before the text finishes. The new Pan lead setting (default 10 seconds, limited to half the crawl) overlaps the reveal with the last lines; 0 keeps the old pan-after-text timing.
+- Opening Crawl: pan distance is measured from the planet, which lands about 56% up the viewport. Crawls without an image use a readable fallback distance. Closing time stays on the old total, so music and endings are not shortened.
+- Opening Crawl: the wordmark uses one text stroke instead of 121 stacked shadows, scales with the window under a viewport-height cap, zooms from a size that does not clip, and limits uploaded logo dimensions. A logo can be overridden per crawl type, with the global logo as fallback.
+- Opening Crawl: episode and title use the film-title face. The episode keeps mixed case, the title is uppercase at 175% instead of 210%, and the body uses the real News Cycle Bold face. The crawl column is wider (21em, capped at 82vw) so long episode lines fit and justified lines do not stretch.
+- Opening Crawl: SWCrawlTitle maps a capital S to the STAR WARS logo and a capital L to the "A long time ago..." line. Episode, title, and the Criminal Empire wordmark use the normal lowercase glyphs, so SESSION, TOTALLY, and LEGAL no longer print artwork inside the crawl. Digit runs are tightened because the font's "1" is very wide.
+- Opening Crawl: new Criminal Empire - Crimson Dawn type with the classic opening line, a gold-on-black wordmark with a crimson keyline, a darker red vignette, and rising embers. Empire and Clone Wars remain available.
+- Opening Crawl: Clone Wars gains drifting blue dust, holographic scanlines, a blue vignette, and occasional hyperspace streaks. Each layer has a switch plus intensity, speed, and density settings. Particles and streaks respect `prefers-reduced-motion`; the crawl still plays.
+- Opening Crawl: the Clone Wars wordmark uses StarJedi logo lettering in blue. StarJedi's O reads as an N, so the zero glyph is used for O: CLONE renders as CLONE.
+- Opening Crawl: finished intro, wordmark, and crawl stages are removed from the document, and the crawl text stays hidden until its delay, so earlier stages cannot paint over later ones.
+- Opening Crawl: the window opens at the client viewport size instead of 4096x2160 and no longer promotes the whole animation subtree with `will-change`, avoiding stale first-paint textures after a resize.
+- Opening Crawl: the wordmark's fly-away is capped to finish when the crawl starts, so STAR WARS no longer sits over the first lines.
+- Opening Crawl: music no longer blocks the crawl. Remote tracks stream through a plain audio element buffered during the intro; local files still use Foundry's audio system.
+- Opening Crawl settings are grouped into General, Presentation, Timing, and Atmosphere effects. File-picker buttons open the correct picker for their field, and clearing a checkbox saves.
+- The crawl type creator uses radio cards with a description and colour chip instead of a dropdown.
+
 `4.2.0`
 
 - REspec follows the system's Mandar theme. It detects `mandar.css` or `mandar-dark.css` and switches the tracker, sheet panel, award and career dialogs, settings, confirms, and chat cards between the parchment and charcoal palettes.
@@ -315,4 +333,3 @@
 -   Initial alpha release
 -   Planned features:
     -   Configurable, open source Hyperspace transition
-
