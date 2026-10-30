@@ -1,4 +1,27 @@
 
+`4.2.0`
+
+- REspec follows the system's Mandar theme. It detects `mandar.css` or `mandar-dark.css` and switches the tracker, sheet panel, award and career dialogs, settings, confirms, and chat cards between the parchment and charcoal palettes.
+- Colours and shapes come from the system sheets: parchment and `bgWindow.jpg` in light, `#0f0f0f` in dark, deep-maroon headers, `#415064`/`#2a3a4a` section bars, `#7da9c2` focus rings, Roboto body text, Elektra display names, and notched corners.
+- The character-sheet panel uses the same parchment or charcoal surface and maroon rule as the surrounding sheet, in both themes.
+- The compact card dashboard stays, with the system's flat button, input, threshold, and pip styling.
+- Fixed the tracker hero collapsing inside the scrolling column, which clipped the title and roll controls.
+- Scoped Mandar's global window button and input rules so the tracker's controls stay consistent in both themes.
+- Party skill audit uses the same light and dark stylesheets: maroon or charcoal header, parchment or charcoal roster card, steel-blue notched section bars and tabs, themed character marks, and an optional breakdown table.
+- Shop generator and vendor sheets use searchable, sortable Mandar-themed item cards with inline stock editing, tag filters, layout controls, and a confirmation before replacing stock.
+
+`4.1.0`
+
+- REspec Tracker shows who has which Pull die. The summary strip lists each player character's Boost/Setback result and whether it is ready or used; character cards show Conflict, Tranquility, Presence, and threshold state.
+- Pull flow: one d100 for the table, a manual override, a new-encounter refresh, per-character Mark spent/Reset die, and a chat card listing every character's die. Rolling the Pull posts the summary automatically.
+- Character cards are compact dashboards: a clickable ten-point Presence track, Conflict/Tranquility steppers with d10 helpers, Fear buttons, a threshold preview with one Apply/Remove action, and a collapsible conflict-talent list. Cards start collapsed when more than two player characters are present.
+- End session previews which way each character will move before applying it. Unified Conflict Roll is disabled with an explanation while Force Presence resolves sessions.
+- Award tables have a character picker, current totals, ranged/amount controls, a Murder row, and re-render after each award. Career powers have a filter and a single scrollable reference view.
+- REspec settings are grouped in an ApplicationV2 panel with a master switch, dependent settings disabled until their prerequisite is on, an open-tracker button, and a threshold-effect cleanup action.
+- The character-sheet panel is injected after Morality/Conflict on the Obligation tab, guarded against duplicate injection, and styled as a compact dark inset with Presence pips, session totals, and the Pull die.
+- `styles/respec.css` is registered in the manifest and loaded dynamically for running worlds with an old cached manifest. The `wizard.html` dialog was removed in favour of inline controls.
+- Macro API: `game.modules.get("ffg-star-wars-enhancements").api.respec` exposes `open`, `settings`, `rollPull`, `newEncounter`, `endSession`, and `getCharacters`.
+
 `4.0.0`
 
 - Foundry VTT 14 is now required (verified 14.368). The 13-compatible line stays on `main`.
@@ -10,6 +33,7 @@
 - Vendor sheet registers at ready and no longer submits actor stats, so closing it does not throw.
 - Manifest: both system ids declared, misspelled compatibility keys fixed, and dependency versions raised. Module url, manifest, and download stay on this fork.
 - Actor sheet dice pools stay in a row. Foundry 14's reset makes every image a block, which stacked the skill dice.
+- Opening Crawl: creating a crawl chooses a type. Empire keeps the saga opening. Clone Wars uses a flatter gold crawl, a red vignette, and a CLONE WARS wordmark. Journals with no type still play as Empire.
 - Opening Crawl: the text scroll runs the full journal, instead of fading out at a fixed distance. The window close timer follows the same speed-adjusted length as the animation. Journal parsing no longer uses jQuery, and the crawl picker uses the journal id.
 - Opening Crawl: a playlist can be chosen in the Opening Crawl settings. It plays through Foundry's playlist sync, alongside or instead of the music file, and stops when the crawl closes unless that switch is turned off.
 - Opening Crawl settings: choice fields render again on Foundry 13+ (the removed `select` helper was still used), and the music delay hint now says seconds.
@@ -19,7 +43,9 @@
 - Dice helper journal lookup uses the first journal of that name that actually has pages, repairs an empty journal, drops its cache when the journal changes, and only the GM creates the journal. Spending suggestions are sorted by how many results they require, and contextual suggestions are grouped. Initiative rolls and the helper's own messages are ignored, and journal text saved in the editor still parses.
 - Shop availability checks roll one pool instead of both halves, rarity above 10 no longer wraps into an easier check, and generation stops when the compendium runs out of candidates.
 - Combatant renaming falls back to neutral when the actor has no token, and talent pills still render when a talent has no description.
+- REspec Optionals: a GM world setting, off until the table opts in. Granular switches add Force Presence, Pull of the Force, a unified Conflict roll, Fear recording, conflict-on-use, and a career-power lookup. New data stays on the module flag. Strain and wound thresholds are one effect that is removed when the setting is turned off.
 - Unit tests for these paths run with `npm run test:unit` and do not need Foundry.
+- Party skill audit: a GM window lists each player-assigned character sheet with a tickbox, and any other character sheet can be added from the roster picker. Star charts are tabbed by skill section for the ticked sheets. Dice pools use yellow and green die symbols, character cards show each sheet's best trained pools, and the breakdown table stays collapsed unless it is opened.
 
 `3.0.0` - 2026-03-28
 - Improvement: [Talent Reminders!](https://github.com/wrycu/StarWarsFFG-Enhancements/pull/232)
@@ -289,3 +315,4 @@
 -   Initial alpha release
 -   Planned features:
     -   Configurable, open source Hyperspace transition
+
