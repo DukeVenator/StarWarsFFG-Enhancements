@@ -1,12 +1,1684 @@
-.vendor-inventory {
-    width: 350px;
-    height: 350px;
-    overflow-y: scroll;
+/* Resizable holo shop. Tokens live on the window and the form so either root can theme its children.
+   Light is the default. Foundry's theme flips the palette unless the system ui-darkmode
+   setting has forced sw-shop--light or sw-shop--dark. */
+
+.sw-shop,
+.sw-shop-window {
+    --sw-shop-bg: #e6eef0;
+    --sw-shop-fg: #122428;
+    --sw-shop-muted: #3e565b;
+    --sw-shop-accent: #0c6e72;
+    --sw-shop-accent-soft: rgba(12, 110, 114, 0.14);
+    --sw-shop-line: rgba(12, 110, 114, 0.55);
+    --sw-shop-card: rgba(255, 255, 255, 0.78);
+    --sw-shop-input: rgba(255, 255, 255, 0.92);
+    --sw-shop-danger: #8c2f2f;
+    --sw-shop-scan: rgba(12, 110, 114, 0.06);
+    --sw-shop-button-fg: #f3ffff;
 }
 
-.vendor-item {
+:root[data-theme="dark"] .sw-shop:not(.sw-shop--light),
+:root[data-theme="dark"] .sw-shop-window:not(.sw-shop--light),
+body.dark .sw-shop:not(.sw-shop--light),
+body.dark .sw-shop-window:not(.sw-shop--light),
+.app.dark .sw-shop:not(.sw-shop--light),
+.sw-shop.sw-shop--dark,
+.sw-shop-window.sw-shop--dark {
+    --sw-shop-bg: #071416;
+    --sw-shop-fg: #d0faff;
+    --sw-shop-muted: #8fd0d4;
+    --sw-shop-accent: #02e3dd;
+    --sw-shop-accent-soft: rgba(2, 227, 221, 0.12);
+    --sw-shop-line: rgba(2, 227, 221, 0.55);
+    --sw-shop-card: rgba(2, 227, 221, 0.07);
+    --sw-shop-input: rgba(0, 0, 0, 0.45);
+    --sw-shop-danger: #ff8d8d;
+    --sw-shop-scan: rgba(2, 227, 221, 0.08);
+    --sw-shop-button-fg: #042226;
+    color-scheme: dark;
+}
+
+.sw-shop.sw-shop--light,
+.sw-shop-window.sw-shop--light {
+    --sw-shop-bg: #e6eef0;
+    --sw-shop-fg: #122428;
+    --sw-shop-muted: #3e565b;
+    --sw-shop-accent: #0c6e72;
+    --sw-shop-accent-soft: rgba(12, 110, 114, 0.14);
+    --sw-shop-line: rgba(12, 110, 114, 0.55);
+    --sw-shop-card: rgba(255, 255, 255, 0.78);
+    --sw-shop-input: rgba(255, 255, 255, 0.92);
+    --sw-shop-danger: #8c2f2f;
+    --sw-shop-scan: rgba(12, 110, 114, 0.06);
+    --sw-shop-button-fg: #f3ffff;
+    color-scheme: light;
+}
+
+.window-app.sw-shop-window .window-content,
+.window-app.sheet.actor.vendor.sw-shop-window .window-content {
+    background: var(--sw-shop-bg);
+    background-image: none;
+    color: var(--sw-shop-fg);
+    padding: 0;
+}
+
+.sw-shop {
+    position: relative;
+    box-sizing: border-box;
+    min-height: 100%;
+    padding: 0.9rem 1rem 1rem;
+    color: var(--sw-shop-fg);
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            transparent,
+            transparent 2px,
+            var(--sw-shop-scan) 2px,
+            var(--sw-shop-scan) 4px
+        ),
+        var(--sw-shop-bg);
+    font-family: Temporarium, "Segoe UI", sans-serif;
+    font-size: 15px;
+}
+
+.vendor.sw-shop {
     display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.sw-shop-flourish {
+    margin: 0 0 0.65rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--sw-shop-line);
+    color: var(--sw-shop-accent);
+    font-family: AurekBesh, serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.42em;
+    text-align: center;
+    text-transform: lowercase;
+}
+
+.sw-shop h2,
+.sw-shop h3 {
+    color: var(--sw-shop-accent);
+    font-family: AnakinMono, monospace;
+    font-weight: normal;
+    letter-spacing: 0.04em;
+}
+
+.sw-shop h2 {
+    margin: 0 0 0.7rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--sw-shop-line);
+    font-size: 1.2rem;
+}
+
+.sw-shop-section {
+    margin: 0 0 0.7rem;
+    padding: 0.65rem 0.75rem 0.75rem;
+    border: 1px solid var(--sw-shop-line);
+    background: var(--sw-shop-card);
+}
+
+.sw-shop-section h3 {
+    margin: 0 0 0.55rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--sw-shop-line);
+    font-size: 0.95rem;
+}
+
+.sw-shop .form-group {
+    display: grid;
+    grid-template-columns: minmax(7.5rem, 13rem) minmax(0, 1fr);
+    gap: 0.3rem 0.75rem;
+    align-items: center;
+    margin: 0.4rem 0;
+}
+
+.sw-shop .form-group label {
+    margin: 0;
+    color: var(--sw-shop-fg);
+    font-size: 0.95rem;
+    line-height: 1.3;
+}
+
+.sw-shop-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.sw-shop-pair .form-group,
+.sw-shop-stack {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+}
+
+.sw-shop-check {
+    grid-template-columns: 1fr auto;
+}
+
+.sw-shop input[type="text"],
+.sw-shop input[type="number"],
+.sw-shop input[type="search"],
+.sw-shop select {
+    width: 100%;
+    margin: 0;
+    padding: 0.32rem 0.45rem;
+    border: 1px solid var(--sw-shop-line);
+    border-radius: 2px;
+    background: var(--sw-shop-input);
+    color: var(--sw-shop-fg);
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+
+.sw-shop input[type="checkbox"] {
+    width: 1.05rem;
+    height: 1.05rem;
+    margin: 0;
+    accent-color: var(--sw-shop-accent);
+}
+
+.sw-shop input:focus,
+.sw-shop select:focus {
+    outline: 1px solid var(--sw-shop-accent);
+    outline-offset: 1px;
+}
+
+.sw-shop-tags {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.sw-shop-tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    min-height: 0.2rem;
+}
+
+.sw-shop-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.1rem 0.2rem 0.1rem 0.45rem;
+    border: 1px solid var(--sw-shop-line);
+    background: var(--sw-shop-accent-soft);
+    color: var(--sw-shop-fg);
+}
+
+.sw-shop button.sw-shop-submit,
+.sw-shop .sw-shop-action {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.7rem;
+    border: 1px solid var(--sw-shop-line);
+    background: var(--sw-shop-accent);
+    color: var(--sw-shop-button-fg);
+    font-family: AnakinMono, monospace;
+    font-size: 0.95rem;
+    letter-spacing: 0.03em;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.sw-shop button.sw-shop-submit {
+    width: 100%;
+    margin-top: 0.35rem;
+}
+
+.sw-shop button.sw-shop-submit:hover,
+.sw-shop .sw-shop-action:hover,
+.sw-shop-sort button.is-active {
+    filter: brightness(1.08);
+}
+
+.sw-shop button.sw-shop-tag-remove {
+    width: auto;
+    margin: 0;
+    padding: 0 0.2rem;
+    border: 0;
+    background: transparent;
+    color: var(--sw-shop-fg);
+    font-family: inherit;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.sw-shop-masthead {
+    display: flex;
+    gap: 0.85rem;
+    align-items: center;
+    margin-bottom: 0.35rem;
+}
+
+.sw-shop-portrait {
+    width: 84px;
+    height: 84px;
+    object-fit: cover;
+    border: 1px solid var(--sw-shop-line);
+    cursor: pointer;
+    flex: 0 0 auto;
+}
+
+.sw-shop-masthead input[name="name"] {
+    flex: 1 1 auto;
+    padding: 0.2rem 0.1rem;
+    border: 0;
+    border-bottom: 1px solid var(--sw-shop-line);
+    border-radius: 0;
+    background: transparent;
+    color: var(--sw-shop-fg);
+    font-family: AnakinMono, monospace;
+    font-size: 1.35rem;
+}
+
+.sw-shop-inventory {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.sw-shop-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    align-items: center;
+}
+
+.sw-shop-toolbar h2 {
+    flex: 1 1 12rem;
+    margin: 0;
+}
+
+.sw-shop-search {
+    flex: 1 1 10rem;
+    min-width: 8rem;
+}
+
+.sw-shop-sort {
+    display: inline-flex;
+    gap: 0.3rem;
+}
+
+.sw-shop-sort button {
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--sw-shop-line);
+    background: transparent;
+    color: var(--sw-shop-fg);
+    font-family: AnakinMono, monospace;
+    cursor: pointer;
+}
+
+.sw-shop-sort button.is-active {
+    background: var(--sw-shop-accent);
+    color: var(--sw-shop-button-fg);
+}
+
+.sw-shop-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 0.6rem;
+    align-content: start;
+    overflow-y: auto;
+    min-height: 0;
+    flex: 1 1 auto;
+    padding-bottom: 0.25rem;
+}
+
+.sw-shop-card {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr) auto;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.5rem;
+    border: 1px solid var(--sw-shop-line);
+    background: var(--sw-shop-card);
+}
+
+.sw-shop-card[hidden] {
+    display: none;
+}
+
+.sw-shop-card img {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border: 1px solid var(--sw-shop-line);
+}
+
+.sw-shop-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    min-width: 0;
+}
+
+.sw-shop-card-body .item-view {
+    color: var(--sw-shop-fg);
+    font-family: AnakinMono, monospace;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.sw-shop-card-body .item-view:hover {
+    color: var(--sw-shop-accent);
+}
+
+.sw-shop-type,
+.sw-shop-roll {
+    color: var(--sw-shop-muted);
+    font-size: 0.82rem;
+}
+
+.sw-shop-price {
+    color: var(--sw-shop-accent);
+    font-family: AnakinMono, monospace;
+}
+
+.sw-shop-restricted {
+    margin-right: 0.25rem;
+    color: var(--sw-shop-danger);
+}
+
+.sw-shop-card-action a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--sw-shop-line);
+    color: var(--sw-shop-accent);
+    text-decoration: none;
+}
+
+.sw-shop-card-action .item-remove {
+    color: var(--sw-shop-danger);
+}
+
+.sw-shop-empty,
+.sw-shop-no-matches {
+    margin: 0.4rem 0 0;
+    color: var(--sw-shop-muted);
+}
+
+.sw-shop-empty {
+    grid-column: 1 / -1;
+}
+
+.sw-shop-no-matches {
+    display: none;
+}
+
+.sw-shop-no-matches.is-visible {
+    display: block;
+}
+
+.sw-shop-helper {
+    margin: 0.2rem 0 0.8rem;
+    color: var(--sw-shop-muted);
+}
+
+@media (max-width: 560px) {
+    .sw-shop-pair,
+    .sw-shop .form-group {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* The vendor window inherits the character sheet. Those rules are more specific than a
+   single class, and Foundry buttons default to full width. This block is the one that
+   actually holds the shop together. */
+.window-app.vendor.sw-shop-window .window-content {
+    overflow: hidden;
+}
+
+.window-app.vendor .sw-shop {
+    display: flex;
+    flex-direction: column;
     height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.window-app.vendor .sw-shop-masthead {
+    display: flex;
+    flex-direction: row;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.85rem;
+    width: 100%;
+    margin: 0 0 0.75rem;
+}
+
+.window-app.vendor .sw-shop img.sw-shop-portrait {
+    display: block;
+    width: 72px !important;
+    height: 72px !important;
+    min-width: 72px;
+    max-width: 72px !important;
+    min-height: 72px;
+    max-height: 72px !important;
+    object-fit: contain;
+    flex: 0 0 72px;
+    background: var(--sw-shop-input);
+}
+
+.window-app.vendor .sw-shop-masthead input[name="name"] {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+    height: auto;
+    margin: 0;
+    font-size: 1.45rem;
+}
+
+.window-app.vendor .sw-shop-inventory {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+}
+
+.window-app.vendor .sw-shop-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas:
+        "title regen show"
+        "search sort layout";
+    align-items: center;
+    gap: 0.4rem 0.45rem;
+}
+
+.window-app.vendor .sw-shop-toolbar h2 {
+    grid-area: title;
+    width: auto;
+    margin: 0;
+    justify-self: start;
+}
+
+.window-app.vendor .sw-shop-toolbar .refresh {
+    grid-area: regen;
+}
+
+.window-app.vendor .sw-shop-toolbar .show-to-players {
+    grid-area: show;
+}
+
+.window-app.vendor .window-content .sw-shop-sort,
+.window-app.vendor .window-content .sw-shop-layout {
+    display: inline-flex;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    width: auto;
+    gap: 0;
+}
+
+.window-app.vendor .window-content .sw-shop-sort button,
+.window-app.vendor .window-content .sw-shop-layout button,
+.window-app.sw-shop-window .window-content .sw-shop button.sw-shop-tag-remove {
+    display: inline-flex;
+    width: auto !important;
+    flex: 0 0 auto;
+    margin: 0;
+    border-radius: 0;
+    padding: 0.35rem 0.7rem;
+    border: 1px solid var(--sw-shop-line);
+    background: transparent;
+    color: var(--sw-shop-fg);
+    font-family: AnakinMono, monospace;
+}
+
+.window-app.vendor .window-content .sw-shop-sort button + button,
+.window-app.vendor .window-content .sw-shop-layout button + button {
+    margin-left: -1px;
+}
+
+.window-app.vendor .window-content .sw-shop-sort button.is-active,
+.window-app.vendor .window-content .sw-shop-layout button.is-active {
+    background: var(--sw-shop-accent);
+    color: var(--sw-shop-button-fg);
+}
+
+.window-app.vendor .sw-shop-search {
+    grid-area: search;
+    flex: none;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+}
+
+.window-app.vendor .sw-shop-sort {
+    grid-area: sort;
+    justify-self: end;
+}
+
+.window-app.vendor .sw-shop-layout {
+    grid-area: layout;
+    justify-self: end;
+}
+
+.window-app.vendor .sw-shop-stock {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 0.85rem;
+    min-height: 0;
+    overflow: auto;
+}
+
+.window-app.vendor .sw-shop-group.is-empty {
+    display: none;
+}
+
+.window-app.vendor .sw-shop-group-title {
+    margin: 0 0 0.4rem;
+    padding: 3px 8px;
+    background: rgba(73, 12, 11, 0.85);
+    color: #fff;
+    font-family: Roboto, "Segoe UI", sans-serif;
+    font-size: 12px;
+    font-weight: normal;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.window-app.vendor .sw-shop-group-title span {
+    margin-left: 0.35rem;
+    opacity: 0.75;
+}
+
+.window-app.vendor .sw-shop-cards {
+    display: grid;
+    align-content: start;
+    align-items: start;
+    gap: 0.55rem;
+    flex: none;
+    min-height: 0;
+    width: 100%;
+    overflow: visible;
+}
+
+.window-app.vendor .sw-shop-manage {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.15rem;
+}
+
+.window-app.vendor .sw-shop-stock-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: inherit;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.window-app.vendor .sw-shop-stock-count {
+    color: inherit;
+    font-size: 0.9rem;
+}
+
+.window-app.vendor .sw-shop-stock-qty {
+    width: 3.4rem !important;
+    min-width: 3.4rem;
+    height: 1.6rem;
+    margin: 0;
+    padding: 0 0.25rem;
+}
+
+.window-app.vendor .sw-shop-manage .item-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    border: 0;
+    color: #ff6b6b;
+    text-decoration: none;
+}
+
+.window-app.vendor .sw-shop-manage .item-buy {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    width: auto !important;
+    margin: 0;
+    padding: 0.22rem 0.55rem;
+    border: 0;
+    border-radius: 3px;
+    background: rgba(73, 12, 11, 0.85);
+    color: #fff;
+    font-size: 0.75rem;
+    text-decoration: none;
+}
+
+.window-app.vendor .sw-shop.is-list .sw-shop-cards,
+.window-app.vendor .sw-shop:not(.is-grid) .sw-shop-cards {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.window-app.vendor .sw-shop.is-grid .sw-shop-cards {
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+}
+
+.window-app.vendor .sw-shop-cards > .sw-shop-card {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    height: auto !important;
+    min-width: 340px;
+    min-height: 12.5rem;
+    max-height: none !important;
+    gap: 0;
+    padding: 0 !important;
+    line-height: normal;
+    --sw-kind: #2a3a4a;
+    --sw-kind-mid: #1a2530;
+    --sw-kind-deep: #0d1218;
+    --sw-kind-frame: #c4a44a;
+    border: 2px solid #415064;
+    border-left: 5px solid var(--sw-kind-frame);
+    border-radius: 6px;
+    overflow: hidden;
+    background: #161616;
+    box-shadow: 0 2px 12px color-mix(in srgb, var(--sw-kind) 45%, transparent);
+}
+
+.window-app.vendor .sw-shop-card.is-weapon {
+    --sw-kind: #7a2a32;
+    --sw-kind-mid: #4a1820;
+    --sw-kind-deep: #1a0c10;
+    --sw-kind-frame: #e07070;
+}
+
+.window-app.vendor .sw-shop-card.is-armour {
+    --sw-kind: #2a4a6e;
+    --sw-kind-mid: #1a3048;
+    --sw-kind-deep: #0c1624;
+    --sw-kind-frame: #7eb0d8;
+}
+
+.window-app.vendor .sw-shop-card.is-consumable {
+    --sw-kind: #1f6b45;
+    --sw-kind-mid: #144830;
+    --sw-kind-deep: #0c1c14;
+    --sw-kind-frame: #7dcea0;
+}
+
+.window-app.vendor .sw-shop-card.is-attachment {
+    --sw-kind: #8a6230;
+    --sw-kind-mid: #4a3418;
+    --sw-kind-deep: #1a140c;
+    --sw-kind-frame: #e0b15a;
+}
+
+.window-app.vendor .sw-shop-card.is-gear {
+    --sw-kind: #5c5348;
+    --sw-kind-mid: #3a342c;
+    --sw-kind-deep: #161410;
+    --sw-kind-frame: #c4b49a;
+}
+
+.window-app.vendor .sw-shop.is-list .sw-shop-cards > .sw-shop-card,
+.window-app.vendor .sw-shop:not(.is-grid) .sw-shop-cards > .sw-shop-card {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    min-width: 42rem;
+    min-height: 4.75rem;
+}
+
+.window-app.vendor .sw-shop-banner,
+.window-app.vendor .sw-shop-body {
+    position: static !important;
+}
+
+.window-app.vendor .sw-shop-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+    min-height: 3.4rem;
+    overflow: hidden;
+    padding: 0.45rem 0.55rem;
+    background: linear-gradient(135deg, #415064 0%, #2a3545 60%, #1a2230 100%);
+}
+
+.window-app.vendor .sw-shop.is-list .sw-shop-banner,
+.window-app.vendor .sw-shop:not(.is-grid) .sw-shop-banner {
+    flex: 0 0 15rem !important;
+    width: 15rem !important;
+    min-width: 12rem !important;
+    max-width: 16rem !important;
+}
+
+.window-app.vendor .sw-shop.is-list .sw-shop-body,
+.window-app.vendor .sw-shop:not(.is-grid) .sw-shop-body {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: stretch !important;
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    justify-content: flex-start;
+    gap: 0.35rem;
+    padding: 0.4rem 0.5rem;
+}
+
+.window-app.vendor .sw-shop.is-list .sw-shop-stats,
+.window-app.vendor .sw-shop:not(.is-grid) .sw-shop-stats {
+    flex-direction: row;
+    flex-wrap: wrap;
+    flex: 1 1 auto;
+    align-items: stretch;
+}
+
+.window-app.vendor .sw-shop.is-list .sw-shop-stat,
+.window-app.vendor .sw-shop:not(.is-grid) .sw-shop-stat {
+    flex: 1 1 9rem;
+    width: auto;
+    min-width: 9rem;
+    max-width: 14rem;
+}
+
+.window-app.vendor .sw-shop.is-list .sw-shop-brackets,
+.window-app.vendor .sw-shop:not(.is-grid) .sw-shop-brackets {
+    flex: 1 1 auto;
+    align-self: center;
+    margin-top: 0;
+}
+
+.window-app.vendor .sw-shop.is-list .sw-shop-manage,
+.window-app.vendor .sw-shop:not(.is-grid) .sw-shop-manage {
+    flex: 0 0 auto;
+    align-self: center;
+    order: 1;
+    margin: 0 0 0 0.15rem;
+}
+
+.window-app.vendor .sw-shop.is-list .sw-shop-blurb,
+.window-app.vendor .sw-shop:not(.is-grid) .sw-shop-blurb,
+.window-app.vendor .sw-shop.is-list .sw-shop-qualities,
+.window-app.vendor .sw-shop:not(.is-grid) .sw-shop-qualities {
+    flex: 1 0 100%;
+    order: 2;
+}
+
+.window-app.vendor .sw-shop.is-list .sw-shop-qualities,
+.window-app.vendor .sw-shop:not(.is-grid) .sw-shop-qualities {
+    display: flex;
+}
+
+.window-app.vendor .sw-shop-banner img.sw-shop-art {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px;
+    max-width: 36px !important;
+    min-height: 36px;
+    max-height: 36px !important;
+    object-fit: contain;
+    flex: 0 0 36px;
+    border: 2px solid var(--sw-kind-frame);
+    border-radius: 4px;
+    background: #1a1a1a;
+    box-shadow: 0 0 6px color-mix(in srgb, var(--sw-kind-frame) 45%, transparent);
+}
+
+.window-app.vendor .sw-shop-banner-text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.window-app.vendor .sw-shop-name {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    color: #ffffff;
+    font-family: Roboto, "Segoe UI", sans-serif;
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+    text-decoration: none;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.window-app.vendor .sw-shop-name:hover {
+    color: #fff;
+}
+
+.window-app.vendor .sw-shop-sub {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+    max-width: 100%;
+    margin-top: 1px;
+    overflow: hidden;
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.window-app.vendor .sw-shop-type {
+    overflow: hidden;
+    padding: 0.05rem 0.4rem;
+    border-radius: 3px;
+    background: #111111;
+    color: #ffffff;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.window-app.vendor .sw-shop-roll {
+    display: inline-flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    line-height: 1;
+    white-space: nowrap;
+    color: #ffffff;
+}
+
+.window-app.vendor .sw-shop-roll .dietype {
+    font-size: 0.95rem;
+}
+
+.window-app.vendor .sw-shop-banner .sw-shop-card-show {
+    position: relative;
+    z-index: 2;
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    margin: 0;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.28);
+    color: #ffffff;
+    cursor: pointer;
+    pointer-events: auto;
+    text-decoration: none;
+    line-height: 1;
+}
+
+.window-app.vendor .sw-shop-banner .sw-shop-card-show:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+}
+
+.window-app.vendor .sw-shop-banner .item-remove {
+    color: #ff8d8d;
+}
+
+.window-app.vendor .sw-shop-restricted,
+.window-app.vendor .sw-shop-banner .sw-shop-rarity-value.is-restricted {
+    margin-right: 0.2rem;
+    color: #ffe8e8;
+    font-size: 0.8rem;
+}
+
+.window-app.vendor .sw-shop-rarity {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+    margin-top: 0.2rem;
+}
+
+.window-app.vendor .sw-shop-rarity-pips {
+    display: inline-flex;
+    flex: 0 0 auto;
+    gap: 2px;
+}
+
+.window-app.vendor .sw-shop-rarity-pips i {
+    display: block;
+    width: 8px;
+    height: 8px;
+    border-radius: 1px;
+    border: 1px solid #ffffff;
+    background: transparent;
+}
+
+.window-app.vendor .sw-shop-rarity-pips i:nth-child(1).is-on { background: #8a8f98; }
+.window-app.vendor .sw-shop-rarity-pips i:nth-child(2).is-on { background: #6f9a86; }
+.window-app.vendor .sw-shop-rarity-pips i:nth-child(3).is-on { background: #2f9e7a; }
+.window-app.vendor .sw-shop-rarity-pips i:nth-child(4).is-on { background: #2a9d8f; }
+.window-app.vendor .sw-shop-rarity-pips i:nth-child(5).is-on { background: #3d8bfd; }
+.window-app.vendor .sw-shop-rarity-pips i:nth-child(6).is-on { background: #7c6bff; }
+.window-app.vendor .sw-shop-rarity-pips i:nth-child(7).is-on { background: #d4a017; }
+.window-app.vendor .sw-shop-rarity-pips i:nth-child(8).is-on { background: #e07a2f; }
+.window-app.vendor .sw-shop-rarity-pips i:nth-child(9).is-on { background: #e23d3d; }
+.window-app.vendor .sw-shop-rarity-pips i:nth-child(10).is-on { background: #c026d3; }
+
+.window-app.vendor .sw-shop-rarity-value {
+    color: #e8eef4;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.window-app.vendor .sw-shop-rarity-value.is-restricted {
+    color: #ff6b6b;
+}
+
+.window-app.vendor .sw-shop-body {
+    display: flex !important;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+    height: auto !important;
+    padding: 0.55rem 0.6rem 0.5rem;
+    background: linear-gradient(180deg, #f5f0e4 0%, #ebe3d0 100%);
+    color: #1b1b1b;
+}
+
+.window-app.vendor .sw-shop-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.window-app.vendor .sw-shop-banner-text,
+.window-app.vendor .sw-shop-name {
+    position: relative;
+}
+
+.window-app.vendor .sw-shop a:focus-visible,
+.window-app.vendor .sw-shop button:focus-visible,
+.window-app.vendor .sw-shop input:focus-visible,
+.window-app.vendor .sw-shop select:focus-visible {
+    outline: 3px solid #1b1b1b;
+    outline-offset: 2px;
+}
+
+.window-app.vendor .sw-shop-stats {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.28rem;
+    margin: 0;
+}
+
+.window-app.vendor .sw-shop-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    margin: 0;
+    padding: 0.22rem 0.5rem;
+    border: 0;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+}
+
+.window-app.vendor .sw-shop-stat.is-highlight {
+    background: rgba(65, 80, 100, 0.16);
+    border: 1px solid rgba(65, 80, 100, 0.45);
+}
+
+.window-app.vendor .sw-shop-stat-label {
+    min-width: 0;
+    color: #3a332c;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+.window-app.vendor .sw-shop-stat-label i {
+    margin-right: 0.3rem;
+    color: #415064;
+}
+
+.window-app.vendor .sw-shop-stat-value {
+    flex: 0 0 auto;
+    color: #141210;
+    font-size: 0.95rem;
+    font-weight: 800;
+    line-height: 1.2;
+    text-align: right;
+}
+
+.window-app.vendor .sw-shop-stat.is-highlight .sw-shop-stat-value {
+    color: #1a2230;
+    font-size: 1.05rem;
+}
+
+.window-app.vendor .sw-shop-stat-value.is-restricted,
+.window-app.vendor .sw-shop-bracket-value.is-restricted {
+    color: #8b0000;
+}
+
+.window-app.vendor .sw-shop-brackets {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.15rem;
+    margin-top: 0.15rem;
+    padding: 0.3rem 0.35rem;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.05);
+    color: #3a332c;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.window-app.vendor .sw-shop-bracket {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    padding: 0.12rem 0.4rem;
+    border-right: 1px solid rgba(65, 80, 100, 0.35);
+    line-height: 1.2;
+}
+
+.window-app.vendor .sw-shop-bracket:last-child {
+    border-right: 0;
+}
+
+.window-app.vendor .sw-shop-bracket i {
+    color: #415064;
+}
+
+.window-app.vendor .sw-shop-bracket-label {
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.window-app.vendor .sw-shop-bracket.is-highlight {
+    border: 1px solid #415064;
+    border-radius: 3px;
+    background: rgba(65, 80, 100, 0.14);
+    color: #141210;
+}
+
+.window-app.vendor .sw-shop-note {
+    margin: 0.1rem 0 0;
+    color: #3a332c;
+    font-size: 0.78rem;
+    line-height: 1.3;
+}
+
+.window-app.vendor .sw-shop-blurb {
+    display: -webkit-box;
+    margin: 0.1rem 0 0;
+    overflow: hidden;
+    color: #241f1a;
+    font-size: 0.8rem;
+    line-height: 1.35;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+.window-app.vendor .sw-shop.is-list .sw-shop-blurb,
+.window-app.vendor .sw-shop:not(.is-grid) .sw-shop-blurb {
+    -webkit-line-clamp: 2;
+}
+
+.window-app.vendor .sw-shop-qualities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem;
+    max-width: 100%;
+    margin-top: 0.1rem;
+    overflow: hidden;
+}
+
+.window-app.vendor .sw-shop-quality {
+    max-width: 100%;
+    overflow: hidden;
+    padding: 0.05rem 0.4rem;
+    border: 1px solid #9f9275;
+    border-bottom: 2px dotted #666;
+    border-radius: 12px;
+    background: #d0c4b8;
+    color: #2d2a26;
+    font-family: Roboto, "Segoe UI", sans-serif;
+    font-size: 0.68rem;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Vendor inventory follows the actor sheet: parchment or #0f0f0f, #666 rows,
+   tag chips, and the sheet header colour rgba(73, 12, 11). */
+.window-app.vendor.sw-shop-window,
+.window-app.vendor .sw-shop {
+    --sw-shop-bg: #d8cbc0;
+    --sw-shop-fg: #191813;
+    --sw-shop-muted: #3d3832;
+    --sw-shop-accent: #490c0b;
+    --sw-shop-accent-soft: rgba(73, 12, 11, 0.12);
+    --sw-shop-line: rgba(0, 0, 0, 0.35);
+    --sw-shop-card: rgba(255, 255, 255, 0.45);
+    --sw-shop-input: rgba(255, 255, 255, 0.72);
+    --sw-shop-danger: #8c2f2f;
+    --sw-shop-scan: transparent;
+    --sw-shop-button-fg: #ffffff;
+}
+
+.window-app.vendor.sw-shop-window.sw-shop--dark,
+:root[data-theme="dark"] .window-app.vendor.sw-shop-window:not(.sw-shop--light),
+body.dark .window-app.vendor.sw-shop-window:not(.sw-shop--light),
+.app.dark .window-app.vendor.sw-shop-window:not(.sw-shop--light),
+.window-app.vendor .sw-shop.sw-shop--dark,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light),
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light),
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) {
+    --sw-shop-bg: #0f0f0f;
+    --sw-shop-fg: #f5f5f5;
+    --sw-shop-muted: #d0d0d0;
+    --sw-shop-accent: #490c0b;
+    --sw-shop-accent-soft: rgba(73, 12, 11, 0.35);
+    --sw-shop-line: #666;
+    --sw-shop-card: #1a1a1a;
+    --sw-shop-input: #1a1a1a;
+    --sw-shop-danger: #ff6b6b;
+    --sw-shop-scan: transparent;
+    --sw-shop-button-fg: #ffffff;
+    color-scheme: dark;
+}
+
+.window-app.vendor .sw-shop {
+    background: var(--sw-shop-bg);
+    font-family: Roboto, "Segoe UI", sans-serif;
+}
+
+.window-app.vendor .sw-shop h2,
+.window-app.vendor .sw-shop-masthead input[name="name"],
+.window-app.vendor .window-content .sw-shop-sort button,
+.window-app.vendor .window-content .sw-shop-layout button,
+.window-app.vendor .sw-shop .sw-shop-action {
+    font-family: Roboto, "Segoe UI", sans-serif;
+    letter-spacing: 0;
+}
+
+.window-app.vendor .sw-shop-toolbar h2 {
+    color: #fff;
+    border: 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+    padding: 4px 8px;
+    background: #490c0b;
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+
+.window-app.vendor .sw-shop .sw-shop-action {
+    background: rgba(73, 12, 11, 0.85);
+    color: #fff;
+    border-color: rgba(0, 0, 0, 0.25);
+}
+
+.window-app.vendor .window-content .sw-shop-sort button.is-active,
+.window-app.vendor .window-content .sw-shop-layout button.is-active {
+    background: rgba(73, 12, 11, 0.85);
+    color: #fff;
+}
+
+.window-app.vendor.sw-shop-window.sw-shop--dark .sw-shop-banner,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-banner,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-banner,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-banner,
+.window-app.vendor .sw-shop.sw-shop--dark .sw-shop-banner {
+    background: linear-gradient(135deg, #2a3a4a 0%, #1a2530 60%, #0d1218 100%);
+}
+
+.window-app.vendor.sw-shop-window.sw-shop--dark .sw-shop-body,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-body,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-body,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-body,
+.window-app.vendor .sw-shop.sw-shop--dark .sw-shop-body {
+    background: linear-gradient(180deg, #141a22 0%, #0d1218 100%);
+    color: #f5f5f5;
+}
+
+.window-app.vendor.sw-shop-window.sw-shop--dark .sw-shop-stat,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-stat,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-stat,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-stat,
+.window-app.vendor .sw-shop.sw-shop--dark .sw-shop-stat,
+.window-app.vendor.sw-shop-window.sw-shop--dark .sw-shop-brackets,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-brackets,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-brackets,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-brackets,
+.window-app.vendor .sw-shop.sw-shop--dark .sw-shop-brackets {
+    background: rgba(255, 255, 255, 0.06);
+    color: #f5f5f5;
+}
+
+.window-app.vendor.sw-shop-window.sw-shop--dark .sw-shop-stat.is-highlight,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-stat.is-highlight,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-stat.is-highlight,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-stat.is-highlight,
+.window-app.vendor .sw-shop.sw-shop--dark .sw-shop-stat.is-highlight,
+.window-app.vendor.sw-shop-window.sw-shop--dark .sw-shop-bracket.is-highlight,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-bracket.is-highlight,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-bracket.is-highlight,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-bracket.is-highlight,
+.window-app.vendor .sw-shop.sw-shop--dark .sw-shop-bracket.is-highlight {
+    background: rgba(42, 58, 74, 0.72);
+    border-color: #8bb8db;
+    color: #ffffff;
+}
+
+.window-app.vendor.sw-shop-window.sw-shop--dark .sw-shop-stat-label,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-stat-label,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-stat-label,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-stat-label,
+.window-app.vendor .sw-shop.sw-shop--dark .sw-shop-stat-label,
+.window-app.vendor.sw-shop-window.sw-shop--dark .sw-shop-brackets,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-brackets,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-brackets,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-brackets,
+.window-app.vendor .sw-shop.sw-shop--dark .sw-shop-brackets,
+.window-app.vendor.sw-shop-window.sw-shop--dark .sw-shop-note,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-note,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-note,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-note,
+.window-app.vendor .sw-shop.sw-shop--dark .sw-shop-note {
+    color: #e4e4e4;
+}
+
+.window-app.vendor.sw-shop-window.sw-shop--dark .sw-shop-stat-label i,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-stat-label i,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-stat-label i,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-stat-label i,
+.window-app.vendor .sw-shop.sw-shop--dark .sw-shop-stat-label i,
+.window-app.vendor.sw-shop-window.sw-shop--dark .sw-shop-bracket i,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-bracket i,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-bracket i,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-bracket i,
+.window-app.vendor .sw-shop.sw-shop--dark .sw-shop-bracket i {
+    color: #8bb8db;
+}
+
+.window-app.vendor.sw-shop-window.sw-shop--dark .sw-shop-stat-value,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-stat-value,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-stat-value,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-stat-value,
+.window-app.vendor .sw-shop.sw-shop--dark .sw-shop-stat-value,
+.window-app.vendor.sw-shop-window.sw-shop--dark .sw-shop-bracket-value,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-bracket-value,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-bracket-value,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-bracket-value,
+.window-app.vendor .sw-shop.sw-shop--dark .sw-shop-bracket-value {
+    color: #ffffff;
+}
+
+.window-app.vendor.sw-shop-window.sw-shop--dark .sw-shop-stat.is-highlight .sw-shop-stat-value,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-stat.is-highlight .sw-shop-stat-value,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-stat.is-highlight .sw-shop-stat-value,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-stat.is-highlight .sw-shop-stat-value,
+.window-app.vendor .sw-shop.sw-shop--dark .sw-shop-stat.is-highlight .sw-shop-stat-value,
+.window-app.vendor.sw-shop-window.sw-shop--dark .sw-shop-bracket.is-highlight .sw-shop-bracket-value,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-bracket.is-highlight .sw-shop-bracket-value,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-bracket.is-highlight .sw-shop-bracket-value,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-bracket.is-highlight .sw-shop-bracket-value,
+.window-app.vendor .sw-shop.sw-shop--dark .sw-shop-bracket.is-highlight .sw-shop-bracket-value {
+    color: #ffffff;
+}
+
+.window-app.vendor.sw-shop-window.sw-shop--dark .sw-shop-bracket,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-bracket,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-bracket,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-bracket,
+.window-app.vendor .sw-shop.sw-shop--dark .sw-shop-bracket {
+    border-right-color: rgba(255, 255, 255, 0.2);
+}
+
+.window-app.vendor.sw-shop-window.sw-shop--dark .sw-shop-stat-value.is-restricted,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-stat-value.is-restricted,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-stat-value.is-restricted,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-stat-value.is-restricted,
+.window-app.vendor .sw-shop.sw-shop--dark .sw-shop-stat-value.is-restricted,
+.window-app.vendor.sw-shop-window.sw-shop--dark .sw-shop-bracket-value.is-restricted,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-bracket-value.is-restricted,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-bracket-value.is-restricted,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-bracket-value.is-restricted,
+.window-app.vendor .sw-shop.sw-shop--dark .sw-shop-bracket-value.is-restricted {
+    color: #ff6b6b;
+}
+
+.window-app.vendor.sw-shop-window.sw-shop--dark .sw-shop-blurb,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-blurb,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-blurb,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-blurb,
+.window-app.vendor .sw-shop.sw-shop--dark .sw-shop-blurb {
+    color: #f0f0f0;
+}
+
+.window-app.vendor.sw-shop-window.sw-shop--dark .sw-shop a:focus-visible,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) a:focus-visible,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) a:focus-visible,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) a:focus-visible,
+.window-app.vendor .sw-shop.sw-shop--dark a:focus-visible,
+.window-app.vendor.sw-shop-window.sw-shop--dark .sw-shop button:focus-visible,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) button:focus-visible,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) button:focus-visible,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) button:focus-visible,
+.window-app.vendor .sw-shop.sw-shop--dark button:focus-visible,
+.window-app.vendor.sw-shop-window.sw-shop--dark .sw-shop input:focus-visible,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) input:focus-visible,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) input:focus-visible,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) input:focus-visible,
+.window-app.vendor .sw-shop.sw-shop--dark input:focus-visible {
+    outline-color: #ffffff;
+}
+
+.window-app.vendor.sw-shop-window.sw-shop--dark .sw-shop-quality,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-quality,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-quality,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-quality,
+.window-app.vendor .sw-shop.sw-shop--dark .sw-shop-quality {
+    border-color: #d0d0d0;
+    border-bottom-color: #d0d0d0;
+    background: #2a2a2a;
+    color: #ffffff;
+}
+
+.window-app.vendor .window-content .sw-shop-sort button:not(.is-active),
+.window-app.vendor .window-content .sw-shop-layout button:not(.is-active),
+.window-app.vendor .window-content .sw-shop input,
+.window-app.vendor .window-content .sw-shop select {
+    border: 2px solid #3f3832;
+    background: #ffffff;
+    color: #1b1b1b;
+    min-height: 2rem;
+}
+
+.window-app.vendor .window-content .sw-shop-sort button.is-active,
+.window-app.vendor .window-content .sw-shop-layout button.is-active,
+.window-app.vendor .sw-shop .sw-shop-action,
+.window-app.vendor .sw-shop-manage .item-buy {
+    background: #490c0b;
+    border-color: #490c0b;
+    color: #ffffff;
+}
+
+.window-app.vendor.sw-shop-window.sw-shop--dark .window-content .sw-shop-sort button:not(.is-active),
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-sort button:not(.is-active),
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-sort button:not(.is-active),
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-sort button:not(.is-active),
+.window-app.vendor .sw-shop.sw-shop--dark .sw-shop-sort button:not(.is-active),
+.window-app.vendor.sw-shop-window.sw-shop--dark .window-content .sw-shop-layout button:not(.is-active),
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-layout button:not(.is-active),
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-layout button:not(.is-active),
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) .sw-shop-layout button:not(.is-active),
+.window-app.vendor .sw-shop.sw-shop--dark .sw-shop-layout button:not(.is-active),
+.window-app.vendor.sw-shop-window.sw-shop--dark .window-content .sw-shop input,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) input,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) input,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) input,
+.window-app.vendor .sw-shop.sw-shop--dark input,
+.window-app.vendor.sw-shop-window.sw-shop--dark .window-content .sw-shop select,
+:root[data-theme="dark"] .window-app.vendor .sw-shop:not(.sw-shop--light) select,
+body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) select,
+.app.dark .window-app.vendor .sw-shop:not(.sw-shop--light) select,
+.window-app.vendor .sw-shop.sw-shop--dark select {
+    border-color: #d0d0d0;
+    background: #1a1a1a;
+    color: #f5f5f5;
+}
+
+/* Create and regenerate use the same sheet palette as the vendor inventory. */
+.window-app.sw-shop-window:not(.vendor),
+.window-app.sw-shop-window:not(.vendor) .sw-shop,
+.window-app.sw-shop-window.sw-shop--light:not(.vendor),
+.window-app.sw-shop-window.sw-shop--light:not(.vendor) .sw-shop {
+    --sw-shop-bg: #d8cbc0;
+    --sw-shop-fg: #191813;
+    --sw-shop-muted: #3d3832;
+    --sw-shop-accent: #490c0b;
+    --sw-shop-accent-soft: rgba(73, 12, 11, 0.12);
+    --sw-shop-line: rgba(0, 0, 0, 0.35);
+    --sw-shop-card: rgba(255, 255, 255, 0.45);
+    --sw-shop-input: rgba(255, 255, 255, 0.72);
+    --sw-shop-danger: #8c2f2f;
+    --sw-shop-scan: transparent;
+    --sw-shop-button-fg: #ffffff;
+}
+
+.window-app.sw-shop-window.sw-shop--dark:not(.vendor),
+.window-app.sw-shop-window.sw-shop--dark:not(.vendor) .sw-shop,
+:root[data-theme="dark"] .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light),
+:root[data-theme="dark"] .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop:not(.sw-shop--light),
+body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light),
+body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop:not(.sw-shop--light),
+.app.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light),
+.app.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop:not(.sw-shop--light) {
+    --sw-shop-bg: #0f0f0f;
+    --sw-shop-fg: #f5f5f5;
+    --sw-shop-muted: #d0d0d0;
+    --sw-shop-accent: #490c0b;
+    --sw-shop-accent-soft: rgba(73, 12, 11, 0.35);
+    --sw-shop-line: #666;
+    --sw-shop-card: #1a1a1a;
+    --sw-shop-input: #1a1a1a;
+    --sw-shop-danger: #ff6b6b;
+    --sw-shop-scan: transparent;
+    --sw-shop-button-fg: #ffffff;
+    color-scheme: dark;
+}
+
+.window-app.sw-shop-window:not(.vendor) .window-content {
+    background: var(--sw-shop-bg);
+    background-image: none;
+    color: var(--sw-shop-fg);
+}
+
+.window-app.sw-shop-window:not(.vendor) .sw-shop {
+    background: var(--sw-shop-bg);
+    color: var(--sw-shop-fg);
+    font-family: Roboto, "Segoe UI", sans-serif;
+}
+
+.window-app.sw-shop-window:not(.vendor) .sw-shop-flourish {
+    display: none;
+}
+
+.window-app.sw-shop-window:not(.vendor) .sw-shop h2,
+.window-app.sw-shop-window:not(.vendor) .sw-shop-section h3 {
+    margin: 0 0 0.7rem;
+    padding: 3px 8px;
+    border: 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+    background: rgba(73, 12, 11, 0.85);
+    color: #fff;
+    font-family: Roboto, "Segoe UI", sans-serif;
+    font-size: 12px;
+    font-weight: normal;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.window-app.sw-shop-window:not(.vendor) .sw-shop-section {
+    margin: 0 0 0.75rem;
+    padding: 0 0 0.65rem;
+    border: 2px solid #3f3832;
+    border-radius: 4px;
+    background: #fffaf4;
+    overflow: hidden;
+}
+
+.window-app.sw-shop-window:not(.vendor) .sw-shop-section h3 {
+    margin: 0 0 0.55rem;
+    border-radius: 0;
+}
+
+.window-app.sw-shop-window:not(.vendor) .sw-shop .form-group {
+    padding: 0 0.65rem;
+}
+
+.window-app.sw-shop-window:not(.vendor) .window-content .sw-shop .form-group label {
+    color: var(--sw-shop-fg);
+    font-family: Roboto, "Segoe UI", sans-serif;
+    font-size: 0.85rem;
+}
+
+.window-app.sw-shop-window:not(.vendor) .window-content .sw-shop input[type="text"],
+.window-app.sw-shop-window:not(.vendor) .window-content .sw-shop input[type="number"],
+.window-app.sw-shop-window:not(.vendor) .window-content .sw-shop input[type="search"],
+.window-app.sw-shop-window:not(.vendor) .window-content .sw-shop select {
+    width: 100% !important;
+    border: 2px solid #3f3832;
+    border-radius: 3px;
+    background: #ffffff;
+    color: #1b1b1b;
+    font-family: Roboto, "Segoe UI", sans-serif;
+}
+
+.window-app.sw-shop-window:not(.vendor) .window-content .sw-shop input[type="text"]:focus,
+.window-app.sw-shop-window:not(.vendor) .window-content .sw-shop input[type="number"]:focus,
+.window-app.sw-shop-window:not(.vendor) .window-content .sw-shop select:focus {
+    border-color: #490c0b;
+    outline: 3px solid #1b1b1b;
+    outline-offset: 2px;
+    box-shadow: none;
+}
+
+.window-app.sw-shop-window:not(.vendor) .sw-shop input[type="checkbox"] {
+    accent-color: #490c0b;
+}
+
+.window-app.sw-shop-window:not(.vendor) .sw-shop-tag {
+    border: 1px solid #9f9275;
+    border-bottom: 2px dotted #666;
+    border-radius: 12px;
+    background: #d0c4b8;
+    color: #2d2a26;
+    font-family: Roboto, "Segoe UI", sans-serif;
+    font-size: 0.72rem;
+}
+
+.window-app.sw-shop-window:not(.vendor) .window-content button.sw-shop-tag-remove {
+    width: auto !important;
+    margin: 0;
+    padding: 0 0.25rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+}
+
+.window-app.sw-shop-window:not(.vendor) .sw-shop-helper {
+    color: var(--sw-shop-muted);
+    font-family: Roboto, "Segoe UI", sans-serif;
+}
+
+.window-app.sw-shop-window:not(.vendor) .window-content button.sw-shop-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    width: 100% !important;
+    margin: 0.35rem 0 0;
+    padding: 0.45rem 0.7rem;
+    border: 0;
+    border-radius: 3px;
+    background: rgba(73, 12, 11, 0.85);
+    color: #fff;
+    font-family: Roboto, "Segoe UI", sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.window-app.sw-shop-window:not(.vendor) .window-content button.sw-shop-submit:hover {
+    background: #6d1614;
+    color: #fff;
+    filter: none;
+}
+
+.window-app.sw-shop-window.sw-shop--dark:not(.vendor) .sw-shop-section,
+:root[data-theme="dark"] .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop-section,
+body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop-section,
+.app.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop-section {
+    border-color: #d0d0d0;
+    background: #141414;
+}
+
+.window-app.sw-shop-window.sw-shop--dark:not(.vendor) .sw-shop-tag,
+:root[data-theme="dark"] .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop-tag,
+body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop-tag,
+.app.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop-tag {
+    border-color: #d0d0d0;
+    border-bottom-color: #d0d0d0;
+    background: #2a2a2a;
+    color: #ffffff;
+}
+
+.window-app.sw-shop-window.sw-shop--dark:not(.vendor) .window-content .sw-shop input[type="text"],
+.window-app.sw-shop-window.sw-shop--dark:not(.vendor) .window-content .sw-shop input[type="number"],
+.window-app.sw-shop-window.sw-shop--dark:not(.vendor) .window-content .sw-shop input[type="search"],
+.window-app.sw-shop-window.sw-shop--dark:not(.vendor) .window-content .sw-shop select,
+:root[data-theme="dark"] .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="text"],
+:root[data-theme="dark"] .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="number"],
+:root[data-theme="dark"] .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="search"],
+:root[data-theme="dark"] .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop select,
+body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="text"],
+body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="number"],
+body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="search"],
+body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop select,
+.app.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="text"],
+.app.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="number"],
+.app.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="search"],
+.app.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop select {
+    border-color: #d0d0d0;
+    background: #1a1a1a;
+    color: #f5f5f5;
+}
+
+.window-app.sw-shop-window.sw-shop--dark:not(.vendor) .window-content .sw-shop input:focus,
+:root[data-theme="dark"] .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input:focus,
+body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input:focus,
+.app.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input:focus,
+.window-app.sw-shop-window.sw-shop--dark:not(.vendor) .window-content .sw-shop select:focus,
+:root[data-theme="dark"] .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop select:focus,
+body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop select:focus,
+.app.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop select:focus {
+    outline-color: #ffffff;
 }

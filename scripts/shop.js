@@ -401,27 +401,144 @@ async function get_player_actors() {
     return pcs;
 }
 
+const SHOP_THEME_CLASSES = ["sw-shop--dark", "sw-shop--light"];
+
+/* Explicit system dark-mode wins. "auto" leaves the Foundry theme selectors in charge. */
+export function shopThemeClass() {
+    let mode = "auto";
+    try {
+        mode = game.settings.get(game.system.id, "ui-darkmode") ?? "auto";
+    } catch (error) {
+        mode = "auto";
+    }
+    if (mode === "on") return "sw-shop--dark";
+    if (mode === "off") return "sw-shop--light";
+    return "";
+}
+
+export async function shopConfirm(title, content) {
+    const confirm = foundry.applications?.api?.DialogV2?.confirm;
+    if (confirm) return confirm({ window: { title }, content, modal: true });
+    return Dialog.confirm({ title, content });
+}
+
+export function applyShopWindowTheme(app) {
+    const theme = shopThemeClass();
+    const el = app?.element;
+    if (!el) return;
+    const $el = el.jquery ? el : $(el);
+    $el.addClass("sw-shop-window");
+    $el.removeClass(SHOP_THEME_CLASSES.join(" "));
+    $el.find(".sw-shop").removeClass(SHOP_THEME_CLASSES.join(" "));
+    if (theme) {
+        $el.addClass(theme);
+        $el.find(".sw-shop").addClass(theme);
+    }
+}
+
+function tagList(value) {
+    const source = Array.isArray(value) ? value : typeof value === "string" ? [value] : [];
+    return source
+        .flatMap((entry) => String(entry).split(","))
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0);
+}
+
+function bindTagEditors(html) {
+    const $html = html.jquery ? html : $(html);
+    const removeLabel = game.i18n.localize("ffg-star-wars-enhancements.shop.html.setup.tag-remove");
+    $html.find(".sw-shop-tags").each((_, el) => {
+        const box = $(el);
+        const hidden = box.find('input[type="hidden"]');
+        const text = box.find(".sw-shop-tag-input");
+        const list = box.find(".sw-shop-tag-list");
+        const sync = () => {
+            const tags = list
+                .find(".sw-shop-tag")
+                .map((__, chip) => $(chip).attr("data-tag"))
+                .get();
+            hidden.val(tags.join(","));
+        };
+        const add = (raw) => {
+            String(raw)
+                .split(",")
+                .map((tag) => tag.trim())
+                .filter((tag) => tag.length > 0)
+                .forEach((tag) => {
+                    const exists = list
+                        .find(".sw-shop-tag")
+                        .toArray()
+                        .some((chip) => $(chip).attr("data-tag").toLowerCase() === tag.toLowerCase());
+                    if (exists) return;
+                    const chip = $("<span class='sw-shop-tag'></span>");
+                    chip.attr("data-tag", tag);
+                    chip.append(document.createTextNode(tag));
+                    const button = $("<button type='button' class='sw-shop-tag-remove'></button>");
+                    button.attr("aria-label", removeLabel);
+                    button.append($("<i class='fas fa-times'></i>"));
+                    chip.append(button);
+                    list.append(chip);
+                });
+            sync();
+        };
+        text.on("keydown", (ev) => {
+            if (ev.key === "Enter" || ev.key === ",") {
+                ev.preventDefault();
+                add(text.val());
+                text.val("");
+            }
+        });
+        text.on("blur", () => {
+            if (String(text.val()).trim()) {
+                add(text.val());
+                text.val("");
+            }
+        });
+        list.on("click", ".sw-shop-tag-remove", (ev) => {
+            ev.preventDefault();
+            $(ev.currentTarget).closest(".sw-shop-tag").remove();
+            sync();
+        });
+    });
+}
+
+const ShopFormBase = foundry.applications?.api?.ApplicationV2
+    ? foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2)
+    : FormApplication;
+
 /*
 Provides a GUI for configuring the shop
 Passes the results to the shop object and generates the shop inventory
  */
-class ShopGenerator extends FormApplication {
+class ShopGenerator extends ShopFormBase {
     constructor(actor_id = null) {
-        super();
+        const theme = shopThemeClass();
+        super({ classes: ["sw-shop-window", theme].filter(Boolean) });
         // allows us to tie the shop generation to a specific, already existing actor
         this.actor_id = actor_id;
     }
 
-    /*
-    No idea what this does, but it is in stuff I'm basing the module off of so it's here too
-     */
-    static get defaultOptions() {
-        return foundry.utils.mergeObject(super.defaultOptions, {
-            template: "modules/ffg-star-wars-enhancements/templates/shop/setup.html",
+    static get DEFAULT_OPTIONS() {
+        return foundry.utils.mergeObject(super.DEFAULT_OPTIONS, {
             id: "ffg-star-wars-enhancements-shop-generator-setup",
-            title: "Shop Generator",
+            classes: ["sw-shop-window"],
+            window: {
+                title: "Shop Generator",
+                resizable: true,
+            },
+            position: {
+                width: 580,
+                height: 720,
+            },
         });
     }
+
+    static PARTS = {
+        content: {
+            template: "modules/ffg-star-wars-enhancements/templates/shop/setup.html",
+            scrollable: [".sw-shop"],
+        },
+    };
 
     /*
     Get the list of players so we can provide a neat dropdown for the GM to select from
@@ -467,11 +584,50 @@ class ShopGenerator extends FormApplication {
                 keep_existing: false,
             };
         }
+        shop.tags_must_contain = tagList(shop.tags_must_contain);
+        shop.tags_must_not_contain = tagList(shop.tags_must_not_contain);
+        shop.tags_must_contain_csv = shop.tags_must_contain.join(",");
+        shop.tags_must_not_contain_csv = shop.tags_must_not_contain.join(",");
         log(module_name, JSON.stringify(shop));
         return {
             actors: actors,
             setup: shop,
+            themeClass: shopThemeClass(),
         };
+    }
+
+    async _prepareContext(options) {
+        return this.getData(options);
+    }
+
+    _onRender(context, options) {
+        super._onRender?.(context, options);
+        const root = this.element?.jquery ? this.element[0] : this.element;
+        bindTagEditors(root);
+        applyShopWindowTheme(this);
+        root?.querySelector("form.sw-shop")?.addEventListener("submit", (event) => this._onFormSubmit(event));
+    }
+
+    /* Confirm before the form closes, so declining leaves the current stock in place. */
+    async _onFormSubmit(event) {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const keep = form?.elements?.keep_existing?.checked;
+        const vendor = game.actors.get(this.actor_id);
+        const existing = vendor?.items?.filter((item) => item) ?? [];
+        if (!keep && existing.length > 0) {
+            const confirmed = await shopConfirm(
+                game.i18n.localize("ffg-star-wars-enhancements.shop.html.setup.confirm-replace.title"),
+                `<p>${game.i18n.localize("ffg-star-wars-enhancements.shop.html.setup.confirm-replace.content")}</p>`,
+            );
+            if (!confirmed) return;
+        }
+        const formData = new foundry.applications.ux.FormDataExtended(form);
+        const data = foundry.utils.expandObject(formData.object);
+        data.shady = form.elements.shady?.checked === true;
+        data.keep_existing = form.elements.keep_existing?.checked === true;
+        await this._updateObject(event, data);
+        await this.close();
     }
 
     /*
@@ -592,6 +748,7 @@ class ShopGenerator extends FormApplication {
         }
         // actually create the new items
         await vendor.createEmbeddedDocuments("Item", to_create);
+        if (vendor.sheet) await vendor.sheet.render(true);
     }
 }
 
@@ -607,25 +764,52 @@ export function open_shop_generator(actor_id = null) {
 Super basic GUI to create a vendor
 This probably isn't needed, but in the interest of increasing visibility of the functionality I wanted to make a GUI flow available
  */
-class ShopCreator extends FormApplication {
+class ShopCreator extends ShopFormBase {
     constructor(actor_id = null) {
-        super();
+        const theme = shopThemeClass();
+        super({ classes: ["sw-shop-window", theme].filter(Boolean) });
         this.actor_id = actor_id;
     }
 
-    static get defaultOptions() {
-        return foundry.utils.mergeObject(super.defaultOptions, {
-            template: "modules/ffg-star-wars-enhancements/templates/shop/create.html",
+    static get DEFAULT_OPTIONS() {
+        return foundry.utils.mergeObject(super.DEFAULT_OPTIONS, {
             id: "ffg-star-wars-enhancements-shop-generator-create",
-            title: "Shop Creator",
+            classes: ["sw-shop-window"],
+            window: {
+                title: "Shop Creator",
+                resizable: true,
+            },
+            position: {
+                width: 460,
+                height: 400,
+            },
         });
     }
 
-    async getData() {
-        let actors = await get_player_actors();
+    static PARTS = {
+        content: {
+            template: "modules/ffg-star-wars-enhancements/templates/shop/create.html",
+        },
+    };
+
+    async _prepareContext() {
         return {
-            actors: actors,
+            themeClass: shopThemeClass(),
         };
+    }
+
+    _onRender(context, options) {
+        super._onRender?.(context, options);
+        const root = this.element?.jquery ? this.element[0] : this.element;
+        applyShopWindowTheme(this);
+        root?.querySelector("form.sw-shop")?.addEventListener("submit", (event) => this._onFormSubmit(event));
+    }
+
+    async _onFormSubmit(event) {
+        event.preventDefault();
+        const formData = new foundry.applications.ux.FormDataExtended(event.currentTarget);
+        await this._updateObject(event, foundry.utils.expandObject(formData.object));
+        await this.close();
     }
 
     async _updateObject(event, data) {
