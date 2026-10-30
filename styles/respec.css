@@ -1,0 +1,2382 @@
+/* REspec tracker, sheet panel, awards, careers, and settings. */
+
+/* The FFG system loads mandar.css or mandar-dark.css; theme.js publishes the
+   active one as data-respec-theme on <html>. Dark tokens are also the fallback
+   so the app still paints before the ready hook resolves the stylesheet. */
+:root,
+:root[data-respec-theme="dark"] {
+    --r-bg: #0f0f0f;
+    --r-panel: #1e1e1e;
+    --r-panel-2: #252525;
+    --r-panel-3: #2a2a2a;
+    --r-panel-hover: #2f2f2f;
+    --r-field: #1a1a1a;
+    --r-inset: rgba(0, 0, 0, 0.28);
+    --r-overlay: rgba(0, 0, 0, 0.5);
+    --r-line: #555;
+    --r-line-soft: #333;
+    --r-line-strong: #666;
+    --r-text: #f5f5f5;
+    --r-heading: #f5f5f5;
+    --r-muted: #aaa;
+    --r-faint: #888;
+    --r-gold: #c4a44a;
+    --r-gold-bright: #e4cd8c;
+    --r-gold-soft: rgba(196, 164, 74, 0.14);
+    --r-gold-line: rgba(196, 164, 74, 0.5);
+    --r-header: #1e1e1e;
+    --r-header-ink: #f5f0e4;
+    --r-header-muted: #aaa;
+    --r-section: #2a3a4a;
+    --r-section-ink: #f5f5f5;
+    --r-primary: #6b1413;
+    --r-primary-hover: #8b1a1a;
+    --r-primary-ink: #f5f0e4;
+    --r-focus: #7da9c2;
+    --r-focus-soft: rgba(125, 169, 194, 0.28);
+    --r-light: #f5f0e4;
+    --r-light-soft: rgba(245, 240, 228, 0.1);
+    --r-light-line: rgba(245, 240, 228, 0.45);
+    --r-neutral: #999;
+    --r-dark: #ff9a9a;
+    --r-dark-soft: rgba(168, 32, 32, 0.14);
+    --r-dark-line: rgba(168, 32, 32, 0.55);
+    --r-pip: #2a2a2a;
+    --r-pip-edge: #555;
+    --r-neutral-pip: #3a3a3a;
+    --r-neutral-pip-edge: #666;
+    --r-light-pip: linear-gradient(180deg, #f7e8b6, #c8aa63);
+    --r-light-pip-edge: #e4cd8c;
+    --r-dark-pip: linear-gradient(180deg, #8b1a1a, #490c0b);
+    --r-dark-pip-edge: #a82020;
+    --r-dark-pip-ink: #ff9a9a;
+    --r-d100: #1e1e1e;
+    --r-d100-ink: #e4cd8c;
+    --r-d100-edge: #e4cd8c;
+    --r-boost: #7da9c2;
+    --r-boost-soft: rgba(125, 169, 194, 0.12);
+    --r-boost-line: rgba(125, 169, 194, 0.5);
+    --r-setback: #ff6b6b;
+    --r-setback-soft: rgba(255, 107, 107, 0.12);
+    --r-setback-line: rgba(255, 107, 107, 0.5);
+    --r-good: #4ade80;
+    --r-good-soft: rgba(74, 222, 128, 0.1);
+    --r-warn: #e2b56b;
+    --r-warn-soft: rgba(226, 181, 107, 0.1);
+    --r-warn-line: rgba(226, 181, 107, 0.45);
+    --r-danger: #ff6b6b;
+    --r-danger-soft: rgba(255, 107, 107, 0.1);
+    --r-danger-line: rgba(255, 107, 107, 0.5);
+    --r-muted-soft: rgba(148, 160, 179, 0.1);
+    --r-shadow: rgba(0, 0, 0, 0.35);
+    --r-shadow-strong: rgba(0, 0, 0, 0.5);
+    --r-highlight: rgba(255, 255, 255, 0.12);
+    --r-btn: #2a2a2a;
+    --r-btn-hover: #3a3a3a;
+    --r-radius: 3px;
+    --r-notch: 6px;
+}
+
+:root[data-respec-theme="light"] {
+    --r-bg: #d8cbc0;
+    --r-panel: #f2e9db;
+    --r-panel-2: #ece0cf;
+    --r-panel-3: #e4d5c0;
+    --r-panel-hover: #f7efe3;
+    --r-field: #f8f2e7;
+    --r-inset: rgba(73, 12, 11, 0.05);
+    --r-overlay: rgba(73, 12, 11, 0.08);
+    --r-line: #b8a99a;
+    --r-line-soft: rgba(73, 12, 11, 0.16);
+    --r-line-strong: #9f9275;
+    --r-text: #2d2a26;
+    --r-heading: #781428;
+    --r-muted: #5f5347;
+    --r-faint: #665748;
+    --r-gold: #9a7424;
+    --r-gold-bright: #6d4d12;
+    --r-gold-soft: rgba(154, 116, 36, 0.12);
+    --r-gold-line: rgba(154, 116, 36, 0.5);
+    --r-header: #490c0b;
+    --r-header-ink: #f5f0e4;
+    --r-header-muted: #e8d6cf;
+    --r-section: #415064;
+    --r-section-ink: #ffffff;
+    --r-primary: #490c0b;
+    --r-primary-hover: #6b1413;
+    --r-primary-ink: #f5f0e4;
+    --r-focus: #7da9c2;
+    --r-focus-soft: rgba(125, 169, 194, 0.28);
+    --r-light: #f5f0e4;
+    --r-light-soft: rgba(196, 164, 74, 0.16);
+    --r-light-line: rgba(154, 116, 36, 0.55);
+    --r-neutral: #9f9275;
+    --r-dark: #781428;
+    --r-dark-soft: rgba(120, 20, 40, 0.1);
+    --r-dark-line: rgba(120, 20, 40, 0.55);
+    --r-pip: #e8dccb;
+    --r-pip-edge: #9f9275;
+    --r-neutral-pip: #b9a98e;
+    --r-neutral-pip-edge: #8a7a62;
+    --r-light-pip: linear-gradient(180deg, #fffaf0, #e4cd8c);
+    --r-light-pip-edge: #9a7424;
+    --r-dark-pip: linear-gradient(180deg, #8b1a1a, #490c0b);
+    --r-dark-pip-edge: #490c0b;
+    --r-dark-pip-ink: #781428;
+    --r-d100: #f8f2e7;
+    --r-d100-ink: #490c0b;
+    --r-d100-edge: #e4cd8c;
+    --r-boost: #2f6f9f;
+    --r-boost-soft: rgba(47, 111, 159, 0.1);
+    --r-boost-line: rgba(47, 111, 159, 0.5);
+    --r-setback: #a82020;
+    --r-setback-soft: rgba(168, 32, 32, 0.1);
+    --r-setback-line: rgba(168, 32, 32, 0.5);
+    --r-good: #1a5c2e;
+    --r-good-soft: rgba(26, 92, 46, 0.1);
+    --r-warn: #8a5a12;
+    --r-warn-soft: rgba(138, 90, 18, 0.1);
+    --r-warn-line: rgba(138, 90, 18, 0.45);
+    --r-danger: #8b0000;
+    --r-danger-soft: rgba(139, 0, 0, 0.08);
+    --r-danger-line: rgba(139, 0, 0, 0.5);
+    --r-muted-soft: rgba(73, 12, 11, 0.08);
+    --r-shadow: rgba(45, 42, 38, 0.14);
+    --r-shadow-strong: rgba(45, 42, 38, 0.22);
+    --r-highlight: rgba(255, 255, 255, 0.45);
+    --r-btn: #e8dccb;
+    --r-btn-hover: #f1e7d8;
+    --r-radius: 3px;
+    --r-notch: 6px;
+}
+
+:root[data-respec-theme="light"] :is(.respec-window, .respec-app) {
+    color-scheme: light;
+}
+
+:root:not([data-respec-theme="light"]) :is(.respec-window, .respec-app) {
+    color-scheme: dark;
+}
+
+.respec-app {
+    color: var(--r-text);
+    font-family: "Roboto", "Segoe UI", sans-serif;
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+.respec-window .window-content {
+    padding: 0;
+    overflow: hidden;
+    color: var(--r-text);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(73, 12, 11, 0.04)),
+        var(--r-bg);
+}
+
+:root[data-respec-theme="light"] .respec-window .window-content {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(73, 12, 11, 0.04)),
+        url("../../../systems/starwarsffg/images/bgWindow.jpg") center / cover no-repeat,
+        var(--r-bg);
+}
+
+:root[data-respec-theme="dark"] .respec-window .window-content {
+    background: var(--r-bg);
+}
+
+.respec-window .window-content > .respec-app {
+    height: 100%;
+}
+
+/* Buttons and fields: flat Mandar-style controls, scoped to beat the system's
+   global .window-app button/input rules. */
+.respec-app button {
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.respec-app button:is(.respec-btn, .respec-mini, .respec-step, .respec-icon-btn) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: auto;
+    height: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 5px 10px;
+    border: 1px solid var(--r-line);
+    border-radius: var(--r-radius);
+    background: var(--r-btn);
+    color: var(--r-text);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.2;
+    text-shadow: none;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+}
+
+.respec-app button:is(.respec-btn, .respec-mini, .respec-step, .respec-icon-btn):hover {
+    border-color: var(--r-focus);
+    background: var(--r-btn-hover);
+    color: var(--r-text);
+}
+
+.respec-app button:is(.respec-btn, .respec-mini, .respec-step, .respec-icon-btn):focus-visible {
+    outline: 2px solid var(--r-focus);
+    outline-offset: 1px;
+}
+
+.respec-app button:is(.respec-btn, .respec-mini, .respec-step, .respec-icon-btn):active {
+    transform: translateY(1px);
+}
+
+.respec-app button:is(.respec-btn, .respec-mini, .respec-step, .respec-icon-btn):disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
+    filter: grayscale(0.3);
+}
+
+.respec-app button.respec-btn-primary {
+    border-color: var(--r-primary);
+    background: var(--r-primary);
+    color: var(--r-primary-ink);
+    font-weight: 700;
+}
+
+.respec-app button.respec-btn-primary:hover {
+    border-color: var(--r-primary-hover);
+    background: var(--r-primary-hover);
+    color: var(--r-primary-ink);
+}
+
+.respec-app button.respec-btn-danger {
+    border-color: var(--r-danger-line);
+    background: var(--r-danger-soft);
+    color: var(--r-danger);
+}
+
+.respec-app button.respec-btn-danger:hover {
+    border-color: var(--r-danger);
+    background: var(--r-danger);
+    color: #fff;
+}
+
+.respec-app button.respec-btn-ghost {
+    width: 100%;
+    border-color: var(--r-line-soft);
+    background: transparent;
+    color: var(--r-muted);
+}
+
+.respec-app button.respec-btn-ghost:hover {
+    background: var(--r-panel-2);
+    color: var(--r-text);
+}
+
+.respec-app button.respec-icon-btn {
+    padding: 5px 7px;
+    border-color: transparent;
+    background: transparent;
+    color: var(--r-muted);
+}
+
+.respec-app button.respec-icon-btn:hover {
+    border-color: var(--r-line);
+    background: var(--r-panel-3);
+    color: var(--r-text);
+}
+
+.respec-app input.respec-input[type] {
+    box-sizing: border-box;
+    width: 100%;
+    height: 28px;
+    min-height: 0;
+    margin: 0;
+    padding: 2px 6px;
+    border: 1px solid var(--r-line);
+    border-radius: var(--r-radius);
+    background: var(--r-field);
+    color: var(--r-text);
+    font-family: inherit;
+    font-size: 13px;
+    text-align: right;
+}
+
+.respec-app input.respec-input[type]:focus {
+    outline: none;
+    border-color: var(--r-focus);
+    box-shadow: 0 0 0 1px var(--r-focus-soft), 0 0 5px var(--r-focus-soft);
+}
+
+.respec-app .respec-input-small {
+    width: 62px;
+    flex: 0 0 62px;
+}
+
+.respec-window .respec-app select,
+.respec-app .respec-award-target select {
+    border: 1px solid var(--r-line);
+    border-radius: var(--r-radius);
+    background: var(--r-field);
+    color: var(--r-text);
+    font-family: inherit;
+}
+
+.respec-app .respec-kicker {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--r-gold-bright);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.respec-app h1,
+.respec-app h2,
+.respec-app h3 {
+    margin: 0;
+    color: var(--r-heading);
+    font-family: "Roboto", "Segoe UI", sans-serif;
+    font-weight: 700;
+    line-height: 1.15;
+}
+
+.respec-app h1 {
+    font-family: "Elektra", "Roboto", sans-serif;
+    font-size: 26px;
+    font-weight: 400;
+    letter-spacing: 0.03em;
+}
+
+.respec-app h2 {
+    color: var(--r-heading);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.respec-app p {
+    margin: 0;
+}
+
+.respec-app .respec-label {
+    color: var(--r-muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.respec-app .respec-hint,
+.respec-app .respec-note {
+    color: var(--r-muted);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.respec-app .respec-status {
+    margin: 0;
+    color: var(--r-gold-bright);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.respec-app .is-hidden {
+    display: none !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* Tracker shell                                                       */
+/* ------------------------------------------------------------------ */
+
+.respec-tracker {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+    padding: 14px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-gutter: stable;
+}
+
+.respec-hero {
+    position: relative;
+    display: flex;
+    flex: 0 0 auto;
+    gap: 18px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    overflow: hidden;
+    border: 1px solid var(--r-primary);
+    border-radius: var(--r-radius);
+    background: var(--r-header);
+    box-shadow: 0 3px 10px var(--r-shadow);
+}
+
+.respec-hero::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: var(--r-gold);
+}
+
+.respec-hero h1 {
+    color: var(--r-header-ink);
+}
+
+.respec-hero-copy {
+    min-width: 0;
+}
+
+.respec-hero-copy p {
+    max-width: 62ch;
+    margin-top: 4px;
+    color: var(--r-header-muted);
+    font-size: 12px;
+}
+
+.respec-hero .respec-kicker,
+.respec-award-hero .respec-kicker,
+.respec-career-hero .respec-kicker,
+.respec-settings-hero .respec-kicker {
+    color: #e4cd8c;
+}
+
+:root[data-respec-theme="light"] .respec-hero .respec-btn-primary {
+    border-color: #e4cd8c;
+    background: #f5f0e4;
+    color: #490c0b;
+}
+
+:root[data-respec-theme="light"] .respec-hero .respec-btn-primary:hover {
+    border-color: #fffaf0;
+    background: #fffaf0;
+    color: #490c0b;
+}
+
+.respec-hero .respec-manual {
+    color: var(--r-header-muted);
+}
+
+.respec-roll-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 0 0 auto;
+}
+
+.respec-d100 {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 78px;
+    height: 78px;
+    border: 1px solid var(--r-d100-edge);
+    border-radius: 50%;
+    background: var(--r-d100);
+    box-shadow: inset 0 0 0 3px var(--r-gold-soft);
+}
+
+.respec-d100 span {
+    color: var(--r-d100-ink);
+    font-family: "Elektra", "Roboto", sans-serif;
+    font-size: 28px;
+    font-weight: 400;
+    line-height: 1;
+}
+
+.respec-d100 small {
+    margin-top: 3px;
+    color: var(--r-muted);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.respec-d100.is-empty span {
+    color: var(--r-faint);
+}
+
+.respec-roll-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.respec-manual {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    color: var(--r-faint);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+/* ------------------------------------------------------------------ */
+/* Pull summary                                                        */
+/* ------------------------------------------------------------------ */
+
+.respec-summary {
+    flex: 0 0 auto;
+    padding: 12px 14px;
+    border: 1px solid var(--r-line);
+    border-top: 3px solid var(--r-primary);
+    border-radius: var(--r-radius);
+    background: var(--r-panel);
+    box-shadow: 0 2px 6px var(--r-shadow);
+}
+
+.respec-summary-head {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.respec-summary-head h2 {
+    width: fit-content;
+    padding: 3px 9px;
+    background: var(--r-section);
+    color: var(--r-section-ink);
+    font-size: 11px;
+    clip-path: polygon(0 var(--r-notch), var(--r-notch) 0, calc(100% - var(--r-notch)) 0, 100% var(--r-notch), 100% calc(100% - var(--r-notch)), calc(100% - var(--r-notch)) 100%, var(--r-notch) 100%, 0 calc(100% - var(--r-notch)));
+}
+
+.respec-summary-head p {
+    margin-top: 3px;
+    color: var(--r-muted);
+    font-size: 11px;
+}
+
+.respec-summary-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.respec-count-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border: 1px solid var(--r-good);
+    border-radius: 2px;
+    background: var(--r-good-soft);
+    color: var(--r-good);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.respec-count-pill.is-muted {
+    border-color: var(--r-line);
+    background: var(--r-muted-soft);
+    color: var(--r-muted);
+}
+
+.respec-chips {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(205px, 1fr));
+    gap: 8px;
+}
+
+.respec-app button.respec-chip {
+    display: flex;
+    gap: 9px;
+    align-items: center;
+    width: 100%;
+    min-height: 52px;
+    padding: 7px 9px;
+    border: 1px solid var(--r-line);
+    border-radius: var(--r-radius);
+    background: var(--r-btn);
+    color: var(--r-text);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 120ms ease, background 120ms ease;
+}
+
+.respec-app button.respec-chip:hover {
+    border-color: var(--r-focus);
+    background: var(--r-panel-hover);
+}
+
+.respec-app button.respec-chip.is-used {
+    opacity: 0.58;
+}
+
+.respec-app button.respec-chip.is-no-roll {
+    opacity: 0.9;
+}
+
+.respec-app button.respec-chip.is-no-roll .respec-chip-state {
+    background: var(--r-muted-soft);
+    color: var(--r-faint);
+}
+
+.respec-app button.respec-chip.is-boost {
+    border-left: 3px solid var(--r-boost);
+}
+
+.respec-app button.respec-chip.is-setback {
+    border-left: 3px solid var(--r-setback);
+}
+
+.respec-app button.respec-chip.is-both {
+    border-left-color: var(--r-gold);
+}
+
+.respec-chip-portrait {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    border: 1px solid var(--r-line);
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--r-field);
+}
+
+.respec-chip-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.respec-chip-main strong {
+    overflow: hidden;
+    color: var(--r-text);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.respec-chip-die {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    color: var(--r-muted);
+    font-size: 10px;
+    white-space: nowrap;
+}
+
+.respec-chip-die img {
+    width: 17px;
+    height: 17px;
+    object-fit: contain;
+}
+
+.respec-chip-awaiting {
+    color: var(--r-faint);
+    font-style: italic;
+}
+
+.respec-chip-state {
+    margin-left: auto;
+    padding: 3px 6px;
+    border-radius: 2px;
+    background: var(--r-good-soft);
+    color: var(--r-good);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.respec-chip.is-used .respec-chip-state {
+    background: var(--r-muted-soft);
+    color: var(--r-muted);
+}
+
+/* ------------------------------------------------------------------ */
+/* Main layout and character cards                                     */
+/* ------------------------------------------------------------------ */
+
+.respec-layout {
+    display: grid;
+    flex: 0 0 auto;
+    grid-template-columns: minmax(0, 1fr) 276px;
+    gap: 12px;
+    align-items: start;
+}
+
+.respec-main {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+}
+
+.respec-card {
+    overflow: hidden;
+    border: 1px solid var(--r-line);
+    border-top: 3px solid var(--r-primary);
+    border-radius: var(--r-radius);
+    background: var(--r-panel);
+    box-shadow: 0 2px 6px var(--r-shadow);
+}
+
+.respec-card-head {
+    display: flex;
+    gap: 9px;
+    align-items: center;
+    padding: 8px 11px;
+    border-bottom: 1px solid var(--r-line-soft);
+    background: var(--r-panel-2);
+    cursor: pointer;
+}
+
+.respec-card.is-collapsed .respec-card-head {
+    border-bottom-color: transparent;
+}
+
+.respec-portrait {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    border: 1px solid var(--r-gold);
+    border-radius: 2px;
+    object-fit: cover;
+    background: var(--r-field);
+}
+
+.respec-card-title {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.respec-card-title strong {
+    overflow: hidden;
+    color: var(--r-heading);
+    font-family: "Elektra", "Roboto", sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.03em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.respec-card-title > span {
+    overflow: hidden;
+    color: var(--r-muted);
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.respec-card-title i {
+    color: var(--r-gold);
+}
+
+.respec-card-meta {
+    display: flex;
+    gap: 7px;
+    align-items: center;
+    color: var(--r-muted);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.respec-card-meta i {
+    margin-right: 2px;
+    font-size: 8px;
+}
+
+.respec-card-meta-pips {
+    padding-left: 7px;
+    border-left: 1px solid var(--r-line-soft);
+    color: var(--r-faint);
+}
+
+.respec-die-badge {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    min-height: 34px;
+    margin-left: auto;
+    padding: 4px 9px;
+    border: 1px solid var(--r-line);
+    border-radius: 2px;
+    background: var(--r-panel);
+    color: var(--r-text);
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.respec-die-badge img {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+}
+
+.respec-die-badge em {
+    padding-left: 6px;
+    border-left: 1px solid var(--r-line-soft);
+    color: var(--r-good);
+    font-size: 9px;
+    font-style: normal;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.respec-die-badge.is-boost {
+    border-color: var(--r-boost-line);
+    background: var(--r-boost-soft);
+}
+
+.respec-die-badge.is-setback {
+    border-color: var(--r-setback-line);
+    background: var(--r-setback-soft);
+}
+
+.respec-die-badge.is-both {
+    border-color: var(--r-gold-line);
+    background: var(--r-gold-soft);
+}
+
+.respec-die-badge.is-used {
+    opacity: 0.58;
+}
+
+.respec-die-badge.is-used em {
+    color: var(--r-muted);
+}
+
+.respec-die-badge.is-none em {
+    color: var(--r-faint);
+}
+
+.respec-die-awaiting {
+    color: var(--r-faint);
+    font-style: italic;
+}
+
+.respec-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+}
+
+.respec-presence {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 8px 10px;
+    border: 1px solid var(--r-line-soft);
+    border-radius: var(--r-radius);
+    background: var(--r-inset);
+}
+
+.respec-presence-head {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.respec-score {
+    color: var(--r-muted);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.respec-score strong {
+    margin-left: 4px;
+    color: var(--r-gold-bright);
+    font-size: 16px;
+    letter-spacing: 0;
+}
+
+.respec-pips {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.respec-app button.respec-pip {
+    width: 25px;
+    height: 23px;
+    flex: 0 0 25px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--r-pip-edge);
+    border-radius: 2px;
+    background: var(--r-pip);
+    cursor: pointer;
+    transition: transform 100ms ease, border-color 100ms ease;
+}
+
+.respec-app button.respec-pip:hover {
+    transform: translateY(-1px);
+    border-color: var(--r-focus);
+}
+
+.respec-app button.respec-pip.is-light {
+    border-color: var(--r-light-pip-edge);
+    background: var(--r-light-pip);
+}
+
+.respec-app button.respec-pip.is-dark {
+    border-color: var(--r-dark-pip-edge);
+    background: var(--r-dark-pip);
+}
+
+.respec-app button.respec-pip.is-neutral {
+    border-color: var(--r-neutral-pip-edge);
+    background: var(--r-neutral-pip);
+}
+
+.respec-app button.respec-pip:disabled {
+    cursor: default;
+    opacity: 0.8;
+}
+
+.respec-pips-legend {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.respec-pips-legend .is-light {
+    color: var(--r-gold-bright);
+}
+
+.respec-pips-legend .is-neutral {
+    color: var(--r-muted);
+}
+
+.respec-pips-legend .is-dark {
+    color: var(--r-dark);
+}
+
+.respec-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.respec-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 8px 9px;
+    border: 1px solid var(--r-line-soft);
+    border-radius: var(--r-radius);
+    background: var(--r-panel-2);
+}
+
+.respec-metric-label {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    color: var(--r-muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.respec-metric-label i {
+    color: var(--r-gold);
+}
+
+.respec-metric-control {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.respec-metric-control .respec-input {
+    flex: 1 1 auto;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.respec-app button.respec-step {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    padding: 0;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.respec-app button.respec-mini {
+    align-self: flex-start;
+    padding: 3px 7px;
+    border-color: var(--r-line-soft);
+    background: transparent;
+    color: var(--r-muted);
+    font-size: 10px;
+}
+
+.respec-app button.respec-mini:hover {
+    color: var(--r-text);
+}
+
+.respec-threshold {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border: 1px solid var(--r-line-soft);
+    border-left: 3px solid var(--r-line);
+    border-radius: var(--r-radius);
+    background: var(--r-panel-2);
+}
+
+.respec-threshold.is-dark {
+    border-left-color: var(--r-dark);
+    background: linear-gradient(90deg, var(--r-dark-soft), transparent 55%), var(--r-panel-2);
+}
+
+.respec-threshold.is-light {
+    border-left-color: var(--r-gold);
+    background: linear-gradient(90deg, var(--r-light-soft), transparent 55%), var(--r-panel-2);
+}
+
+.respec-threshold.is-dirty {
+    border-color: var(--r-gold-line);
+}
+
+.respec-threshold-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.respec-threshold-label {
+    color: var(--r-text);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.respec-threshold-detail,
+.respec-threshold-extra {
+    color: var(--r-muted);
+    font-size: 10px;
+}
+
+.respec-threshold-extra.is-danger {
+    color: var(--r-danger);
+    font-weight: 700;
+}
+
+.respec-threshold button.respec-btn {
+    flex: 0 0 auto;
+    padding: 4px 8px;
+    font-size: 10px;
+}
+
+.respec-threshold-ok {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    flex: 0 0 auto;
+    color: var(--r-good);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.respec-pull-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border: 1px solid var(--r-line-soft);
+    border-radius: var(--r-radius);
+    background: var(--r-gold-soft);
+}
+
+.respec-pull-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.respec-pull-die {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    color: var(--r-text);
+    font-size: 12px;
+}
+
+.respec-pull-die img {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+}
+
+.respec-pull-die strong {
+    color: var(--r-heading);
+    font-size: 12px;
+}
+
+.respec-pull-die em {
+    padding: 2px 5px;
+    border-radius: 2px;
+    background: var(--r-good-soft);
+    color: var(--r-good);
+    font-size: 9px;
+    font-style: normal;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.respec-pull-die.is-used {
+    opacity: 0.6;
+}
+
+.respec-pull-die.is-used em {
+    background: var(--r-muted-soft);
+    color: var(--r-muted);
+}
+
+.respec-pull-die.is-no-roll {
+    color: var(--r-muted);
+}
+
+.respec-pull-die.is-no-roll span {
+    font-weight: 600;
+}
+
+.respec-pull-die.is-no-roll em {
+    background: var(--r-muted-soft);
+    color: var(--r-muted);
+}
+
+.respec-pull-actions {
+    flex: 0 0 auto;
+}
+
+.respec-fear {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.respec-fear-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+}
+
+.respec-app button.respec-fear-btn {
+    justify-content: flex-start;
+    padding: 4px 6px;
+    font-size: 9px;
+    line-height: 1.2;
+}
+
+.respec-fear-btn i {
+    color: var(--r-gold);
+}
+
+.respec-details {
+    border: 1px solid var(--r-line-soft);
+    border-radius: var(--r-radius);
+    background: var(--r-panel-2);
+}
+
+.respec-details summary {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    padding: 7px 10px;
+    color: var(--r-muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    list-style: none;
+}
+
+.respec-details summary::-webkit-details-marker {
+    display: none;
+}
+
+.respec-details summary i {
+    color: var(--r-gold);
+}
+
+.respec-details[open] summary {
+    border-bottom: 1px solid var(--r-line-soft);
+}
+
+.respec-talents {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin: 0;
+    padding: 7px 10px;
+    list-style: none;
+}
+
+.respec-talents li {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+}
+
+.respec-talents .respec-mini {
+    align-self: center;
+}
+
+.respec-card-body > .respec-hint {
+    margin: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Sidebar                                                             */
+/* ------------------------------------------------------------------ */
+
+.respec-side {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+}
+
+.respec-panel {
+    padding: 10px 12px;
+    overflow: hidden;
+    border: 1px solid var(--r-line);
+    border-radius: var(--r-radius);
+    background: var(--r-panel);
+    box-shadow: 0 2px 6px var(--r-shadow);
+}
+
+.respec-panel > h2,
+.respec-panel > summary {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin: -10px -12px 8px;
+    padding: 6px 12px;
+    border: 0;
+    background: var(--r-section);
+    color: var(--r-section-ink);
+    font-size: 10px;
+    clip-path: polygon(0 var(--r-notch), var(--r-notch) 0, calc(100% - var(--r-notch)) 0, 100% var(--r-notch), 100% calc(100% - var(--r-notch)), calc(100% - var(--r-notch)) 100%, var(--r-notch) 100%, 0 calc(100% - var(--r-notch)));
+}
+
+.respec-panel > h2 i,
+.respec-panel > summary i {
+    color: var(--r-section-ink);
+}
+
+.respec-kv {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 3px 0;
+    color: var(--r-muted);
+    font-size: 11px;
+}
+
+.respec-kv strong {
+    color: var(--r-text);
+    font-size: 13px;
+}
+
+.respec-side-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 8px;
+}
+
+.respec-side-actions button.respec-btn {
+    width: 100%;
+    justify-content: flex-start;
+}
+
+.respec-panel .respec-hint {
+    margin-bottom: 7px;
+}
+
+.respec-guide summary {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    color: var(--r-section-ink);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    list-style: none;
+}
+
+.respec-guide summary i {
+    color: var(--r-section-ink);
+}
+
+.respec-guide summary::-webkit-details-marker {
+    display: none;
+}
+
+.respec-guide-body {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-top: 9px;
+    color: var(--r-muted);
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+/* ------------------------------------------------------------------ */
+/* Empty states                                                        */
+/* ------------------------------------------------------------------ */
+
+.respec-empty-state {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+    padding: 24px;
+    border: 1px dashed var(--r-line);
+    border-radius: var(--r-radius);
+    background: var(--r-inset);
+    text-align: center;
+}
+
+.respec-empty-state i {
+    color: var(--r-gold);
+    font-size: 24px;
+}
+
+.respec-empty-state h2 {
+    font-size: 14px;
+    text-transform: none;
+}
+
+.respec-empty-state p {
+    max-width: 48ch;
+    color: var(--r-muted);
+    font-size: 11px;
+}
+
+.respec-empty-inline {
+    padding: 8px;
+    color: var(--r-muted);
+    font-size: 11px;
+    font-style: italic;
+}
+
+/* ------------------------------------------------------------------ */
+/* Character sheet panel                                               */
+/* ------------------------------------------------------------------ */
+
+.respec-sheet {
+    margin: 10px 4px 4px;
+    overflow: hidden;
+    border: 1px solid var(--r-line);
+    border-left: 3px solid var(--r-primary);
+    border-radius: var(--r-radius);
+    background: var(--r-panel);
+    box-shadow: 0 2px 6px var(--r-shadow);
+}
+
+.respec-sheet-head {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--r-line-soft);
+    background: var(--r-panel-2);
+}
+
+.respec-sheet-title {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.respec-sheet-title > strong {
+    color: var(--r-heading);
+    font-family: "Elektra", "Roboto", sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.respec-sheet-head .respec-icon-btn {
+    margin-left: auto;
+}
+
+.respec-threshold-chip {
+    padding: 2px 7px;
+    border: 1px solid var(--r-line);
+    border-radius: 2px;
+    color: var(--r-muted);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.respec-threshold-chip.is-dark {
+    border-color: var(--r-dark-line);
+    background: var(--r-dark-soft);
+    color: var(--r-dark);
+}
+
+.respec-threshold-chip.is-light {
+    border-color: var(--r-light-line);
+    background: var(--r-light-soft);
+    color: var(--r-gold-bright);
+}
+
+.respec-sheet-body {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 10px;
+}
+
+.respec-sheet.is-collapsed .respec-sheet-body {
+    display: none;
+}
+
+.respec-sheet-presence {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.respec-sheet-presence-head {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.respec-sheet-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+}
+
+.respec-sheet-stat {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border: 1px solid var(--r-line-soft);
+    border-radius: var(--r-radius);
+    background: var(--r-panel-2);
+}
+
+.respec-sheet-stat span {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    color: var(--r-muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.respec-sheet-stat i {
+    color: var(--r-gold);
+}
+
+.respec-sheet-stat strong {
+    color: var(--r-text);
+    font-size: 16px;
+}
+
+.respec-sheet .respec-pull-row {
+    padding: 6px 8px;
+}
+
+/* Mandar dark styles every span inside a legacy .window-app sheet, which would
+   otherwise flatten the panel's semantic colours to plain white. */
+.respec-app.respec-sheet .respec-kicker {
+    color: var(--r-gold-bright);
+}
+
+.respec-app.respec-sheet .respec-label,
+.respec-app.respec-sheet .respec-score,
+.respec-app.respec-sheet .respec-sheet-stat span {
+    color: var(--r-muted);
+}
+
+.respec-app.respec-sheet .respec-pips-legend .is-light {
+    color: var(--r-gold-bright);
+}
+
+.respec-app.respec-sheet .respec-pips-legend .is-neutral {
+    color: var(--r-muted);
+}
+
+.respec-app.respec-sheet .respec-pips-legend .is-dark {
+    color: var(--r-dark);
+}
+
+.respec-app.respec-sheet .respec-pull-die span {
+    color: inherit;
+}
+
+.respec-app.respec-sheet .respec-pull-die strong,
+.respec-app.respec-sheet .respec-sheet-stat strong {
+    color: var(--r-heading);
+}
+
+.respec-app.respec-sheet .respec-pull-die em {
+    background: var(--r-good-soft);
+    color: var(--r-good);
+}
+
+.respec-app.respec-sheet .respec-pull-die.is-used em,
+.respec-app.respec-sheet .respec-pull-die.is-no-roll em {
+    background: var(--r-muted-soft);
+    color: var(--r-muted);
+}
+
+.respec-app.respec-sheet .respec-threshold-chip {
+    color: var(--r-muted);
+}
+
+.respec-app.respec-sheet .respec-threshold-chip.is-dark {
+    background: var(--r-dark-soft);
+    color: var(--r-dark);
+}
+
+.respec-app.respec-sheet .respec-threshold-chip.is-light {
+    background: var(--r-light-soft);
+    color: var(--r-gold-bright);
+}
+
+.respec-app.respec-sheet .respec-threshold-label {
+    color: var(--r-text);
+}
+
+.respec-app.respec-sheet .respec-threshold-detail,
+.respec-app.respec-sheet .respec-threshold-extra {
+    color: var(--r-muted);
+}
+
+.respec-app.respec-sheet .respec-threshold-extra.is-danger {
+    color: var(--r-danger);
+}
+
+.respec-app.respec-sheet .respec-threshold-ok {
+    color: var(--r-good);
+}
+
+.respec-app.respec-sheet .respec-hint,
+.respec-app.respec-sheet .respec-note {
+    color: var(--r-muted);
+}
+
+.respec-app.respec-sheet .respec-details summary {
+    color: var(--r-muted);
+}
+
+/* ------------------------------------------------------------------ */
+/* Award tables                                                        */
+/* ------------------------------------------------------------------ */
+
+.respec-award,
+.respec-career,
+.respec-settings {
+    height: 100%;
+    padding: 14px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.respec-career-hero > div:first-child {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.respec-career-hero .respec-search {
+    flex: 0 0 250px;
+    align-self: flex-start;
+    margin-top: 0;
+}
+
+.respec-award-hero,
+.respec-career-hero,
+.respec-settings-hero {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border: 1px solid var(--r-primary);
+    border-radius: var(--r-radius);
+    background: var(--r-header);
+    box-shadow: 0 3px 10px var(--r-shadow);
+}
+
+.respec-award-hero h1,
+.respec-career-hero h1,
+.respec-settings-hero h1 {
+    color: var(--r-header-ink);
+}
+
+.respec-award-hero p,
+.respec-career-hero p,
+.respec-settings-hero p {
+    max-width: 56ch;
+    margin-top: 4px;
+    color: var(--r-header-muted);
+    font-size: 11px;
+}
+
+.respec-award-target {
+    display: flex;
+    gap: 9px;
+    align-items: center;
+    flex: 0 0 auto;
+    padding: 8px;
+    border: 1px solid var(--r-gold-line);
+    border-radius: var(--r-radius);
+    background: var(--r-field);
+}
+
+.respec-award-target img {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--r-gold);
+    border-radius: 2px;
+    object-fit: cover;
+}
+
+.respec-award-target-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.respec-award-target-copy label {
+    color: var(--r-muted);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.respec-award-target select {
+    min-width: 190px;
+    height: 26px;
+    border: 1px solid var(--r-line);
+    border-radius: 2px;
+    background: var(--r-panel);
+    color: var(--r-text);
+    font-family: inherit;
+    font-size: 12px;
+}
+
+.respec-award-totals {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin: 10px 0;
+}
+
+.respec-award-total {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border: 1px solid var(--r-line);
+    border-radius: var(--r-radius);
+    background: var(--r-panel-2);
+}
+
+.respec-award-total span {
+    color: var(--r-muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.respec-award-total strong {
+    color: var(--r-gold-bright);
+    font-size: 22px;
+}
+
+.respec-award-total.is-muted strong {
+    color: var(--r-muted);
+    font-size: 16px;
+}
+
+.respec-award-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.respec-award-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 74px 88px;
+    gap: 8px;
+    align-items: center;
+    padding: 7px 9px;
+    border: 1px solid var(--r-line-soft);
+    border-radius: var(--r-radius);
+    background: var(--r-panel-2);
+}
+
+.respec-award-row.is-danger {
+    border-color: var(--r-danger-line);
+    background: linear-gradient(90deg, var(--r-danger-soft), var(--r-panel-2) 55%);
+}
+
+.respec-award-label {
+    display: flex;
+    gap: 7px;
+    align-items: baseline;
+    min-width: 0;
+}
+
+.respec-award-label strong {
+    color: var(--r-text);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.respec-range {
+    flex: 0 0 auto;
+    padding: 1px 5px;
+    border-radius: 2px;
+    background: var(--r-gold-soft);
+    color: var(--r-gold-bright);
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.respec-award-fixed {
+    justify-self: end;
+    color: var(--r-muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.respec-award-row button.respec-btn {
+    justify-self: end;
+    padding: 4px 8px;
+    font-size: 10px;
+}
+
+.respec-award-foot {
+    margin-top: 10px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Careers                                                             */
+/* ------------------------------------------------------------------ */
+
+.respec-search {
+    display: flex;
+    gap: 7px;
+    align-items: center;
+    margin-top: 9px;
+    padding: 5px 9px;
+    border: 1px solid var(--r-gold-line);
+    border-radius: var(--r-radius);
+    background: var(--r-field);
+}
+
+.respec-search i {
+    color: var(--r-gold);
+}
+
+.respec-search input {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: var(--r-text);
+    font-family: inherit;
+    font-size: 12px;
+    outline: none;
+}
+
+.respec-career-unassigned {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+    margin: 10px 0;
+    padding: 8px 10px;
+    border: 1px solid var(--r-gold-line);
+    border-radius: var(--r-radius);
+    background: var(--r-gold-soft);
+    color: var(--r-muted);
+    font-size: 11px;
+}
+
+.respec-career-unassigned strong {
+    color: var(--r-gold-bright);
+}
+
+.respec-career-group {
+    margin-top: 12px;
+}
+
+.respec-career-group > h2 {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 7px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--r-line-soft);
+    color: var(--r-gold-bright);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.respec-power-chips {
+    display: inline-flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.respec-power-chip {
+    padding: 1px 6px;
+    border: 1px solid var(--r-line);
+    border-radius: 2px;
+    background: var(--r-panel-2);
+    color: var(--r-muted);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.respec-career-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 6px;
+}
+
+.respec-spec-card {
+    padding: 8px 10px;
+    border: 1px solid var(--r-line-soft);
+    border-radius: var(--r-radius);
+    background: var(--r-panel-2);
+}
+
+.respec-spec-card h3 {
+    color: var(--r-heading);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.respec-power-list {
+    margin-top: 3px;
+    color: var(--r-gold-bright);
+    font-size: 10px;
+}
+
+.respec-spec-card .respec-note {
+    margin-top: 4px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Settings                                                            */
+/* ------------------------------------------------------------------ */
+
+.respec-settings-hero {
+    align-items: center;
+}
+
+.respec-master-toggle {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex: 0 0 auto;
+    padding: 9px 12px;
+    border: 1px solid var(--r-gold-line);
+    border-radius: var(--r-radius);
+    background: var(--r-field);
+    cursor: pointer;
+}
+
+.respec-master-toggle.is-on {
+    border-color: var(--r-gold);
+    background: var(--r-field);
+}
+
+.respec-master-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-width: 170px;
+}
+
+.respec-master-copy strong {
+    color: var(--r-text);
+    font-size: 12px;
+}
+
+.respec-master-copy small {
+    color: var(--r-muted);
+    font-size: 10px;
+    line-height: 1.3;
+}
+
+.respec-master-toggle input,
+.respec-setting input {
+    width: 17px;
+    height: 17px;
+    flex: 0 0 17px;
+    margin: 0;
+    accent-color: var(--r-gold);
+    cursor: pointer;
+}
+
+.respec-notice {
+    display: flex;
+    gap: 7px;
+    align-items: flex-start;
+    margin: 9px 0;
+    padding: 8px 10px;
+    border: 1px solid var(--r-gold-line);
+    border-radius: var(--r-radius);
+    background: var(--r-gold-soft);
+    color: var(--r-muted);
+    font-size: 11px;
+}
+
+.respec-notice i {
+    margin-top: 2px;
+    color: var(--r-gold);
+}
+
+.respec-notice.is-warn {
+    border-color: var(--r-warn-line);
+    background: var(--r-warn-soft);
+}
+
+.respec-settings-group {
+    margin-top: 12px;
+}
+
+.respec-settings-group > h2 {
+    display: flex;
+    gap: 7px;
+    align-items: center;
+    margin-bottom: 6px;
+    color: var(--r-gold-bright);
+    font-size: 11px;
+}
+
+.respec-settings-group > h2 i {
+    color: var(--r-gold);
+}
+
+.respec-settings-group > h2 small {
+    color: var(--r-faint);
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.respec-setting-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.respec-setting {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 10px;
+    border: 1px solid var(--r-line-soft);
+    border-radius: var(--r-radius);
+    background: var(--r-panel-2);
+    cursor: pointer;
+}
+
+.respec-setting:hover {
+    border-color: var(--r-line);
+    background: var(--r-panel-hover);
+}
+
+.respec-setting.is-disabled {
+    opacity: 0.48;
+    cursor: not-allowed;
+}
+
+.respec-setting-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    border: 1px solid var(--r-line-soft);
+    border-radius: 2px;
+    color: var(--r-gold);
+}
+
+.respec-setting-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.respec-setting-copy strong {
+    color: var(--r-text);
+    font-size: 12px;
+}
+
+.respec-setting-copy small {
+    color: var(--r-muted);
+    font-size: 10px;
+    line-height: 1.35;
+}
+
+.respec-setting input {
+    margin-left: auto;
+}
+
+.respec-settings-foot {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid var(--r-line-soft);
+}
+
+.respec-settings-note {
+    margin-left: auto;
+    color: var(--r-faint);
+    font-size: 10px;
+    font-style: italic;
+}
+
+.respec-settings-foot button.respec-btn-ghost {
+    width: auto;
+    margin-left: auto;
+}
+
+/* ------------------------------------------------------------------ */
+/* Chat cards and dialogs                                              */
+/* ------------------------------------------------------------------ */
+
+.respec-chat {
+    padding: 8px 10px;
+    border: 1px solid var(--r-gold-line);
+    border-radius: var(--r-radius);
+    background: var(--r-panel);
+    color: var(--r-text);
+}
+
+.respec-chat-head {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--r-line-soft);
+}
+
+.respec-chat-head strong {
+    color: var(--r-heading);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.respec-chat-head span {
+    color: var(--r-muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.respec-chat-intro,
+.respec-chat-foot {
+    color: var(--r-muted);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.respec-chat-foot {
+    margin-top: 6px;
+    padding-top: 5px;
+    border-top: 1px solid var(--r-line-soft);
+    font-size: 10px;
+    font-style: italic;
+}
+
+.respec-chat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 7px 0;
+    padding: 0;
+    list-style: none;
+}
+
+.respec-chat-list li {
+    display: flex;
+    gap: 7px;
+    align-items: center;
+    padding: 4px 6px;
+    border: 1px solid var(--r-line-soft);
+    border-radius: 2px;
+    background: var(--r-inset);
+    font-size: 11px;
+}
+
+.respec-chat-list li.is-used {
+    opacity: 0.6;
+}
+
+.respec-chat-portrait {
+    width: 22px;
+    height: 22px;
+    border: 1px solid var(--r-line);
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.respec-chat-name {
+    flex: 1 1 auto;
+    overflow: hidden;
+    color: var(--r-text);
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.respec-chat-die {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    color: var(--r-muted);
+    white-space: nowrap;
+}
+
+.respec-chat-die img {
+    width: 17px;
+    height: 17px;
+    object-fit: contain;
+}
+
+.respec-chat-die em {
+    font-style: normal;
+}
+
+.respec-chat-state {
+    padding: 2px 5px;
+    border-radius: 2px;
+    background: var(--r-good-soft);
+    color: var(--r-good);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.respec-chat-list li.is-used .respec-chat-state {
+    background: var(--r-muted-soft);
+    color: var(--r-muted);
+}
+
+.respec-chat-line {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 12px;
+}
+
+.respec-chat-line .respec-chat-die {
+    display: inline-flex;
+}
+
+.respec-dialog {
+    padding: 10px 12px;
+}
+
+.dialog:has(.respec-dialog) .window-content,
+.application:has(.respec-dialog) .window-content {
+    background: var(--r-panel);
+    color: var(--r-text);
+}
+
+.dialog:has(.respec-dialog) .form-footer button,
+.dialog:has(.respec-dialog) .dialog-buttons button {
+    border: 1px solid var(--r-line);
+    border-radius: var(--r-radius);
+    background: var(--r-btn);
+    color: var(--r-text);
+    font-family: "Roboto", "Segoe UI", sans-serif;
+}
+
+.dialog:has(.respec-dialog) .form-footer button:hover,
+.dialog:has(.respec-dialog) .dialog-buttons button:hover {
+    border-color: var(--r-focus);
+    background: var(--r-btn-hover);
+    color: var(--r-text);
+}
+
+.dialog:has(.respec-dialog) .form-footer button:first-child,
+.dialog:has(.respec-dialog) .dialog-buttons button:first-child {
+    border-color: var(--r-primary);
+    background: var(--r-primary);
+    color: var(--r-primary-ink);
+    font-weight: 700;
+}
+
+.dialog:has(.respec-dialog) .form-footer button:first-child:hover,
+.dialog:has(.respec-dialog) .dialog-buttons button:first-child:hover {
+    border-color: var(--r-primary-hover);
+    background: var(--r-primary-hover);
+    color: var(--r-primary-ink);
+}
+
+.respec-dialog-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 8px 0 0;
+    padding-left: 18px;
+    color: var(--r-text);
+    font-size: 12px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Narrow windows                                                      */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 760px) {
+    .respec-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .respec-hero,
+    .respec-award-hero,
+    .respec-career-hero,
+    .respec-settings-hero {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .respec-roll-box,
+    .respec-award-target,
+    .respec-master-toggle {
+        align-self: stretch;
+    }
+
+    .respec-summary-head {
+        flex-direction: column;
+    }
+
+    .respec-summary-actions {
+        justify-content: flex-start;
+    }
+
+    .respec-metrics,
+    .respec-fear-buttons,
+    .respec-sheet-stats,
+    .respec-award-totals {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .respec-award-row {
+        grid-template-columns: minmax(0, 1fr) 66px 78px;
+    }
+}
+
+@media (max-width: 520px) {
+    .respec-tracker,
+    .respec-award,
+    .respec-career,
+    .respec-settings {
+        padding: 9px;
+    }
+
+    .respec-metrics,
+    .respec-fear-buttons,
+    .respec-sheet-stats,
+    .respec-award-totals {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .respec-app button.respec-pip {
+        width: 21px;
+        height: 21px;
+        flex-basis: 21px;
+    }
+
+    .respec-award-row {
+        grid-template-columns: minmax(0, 1fr) 70px;
+    }
+
+    .respec-award-row button.respec-btn {
+        grid-column: 2;
+    }
+}

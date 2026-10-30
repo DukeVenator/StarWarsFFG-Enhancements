@@ -1,0 +1,52 @@
+<section class="respec-app respec-career" data-respec-career>
+    <header class="respec-career-hero">
+        <div>
+            <span class="respec-kicker">{{localize "ffg-star-wars-enhancements.respec.primer"}}</span>
+            <h1>{{localize "ffg-star-wars-enhancements.respec.career-title"}}</h1>
+            <p>{{localize "ffg-star-wars-enhancements.respec.career-lookup-note"}}</p>
+        </div>
+        <label class="respec-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="search" data-career-search placeholder="{{localize "ffg-star-wars-enhancements.respec.careers-search"}}">
+        </label>
+    </header>
+
+    <div class="respec-career-unassigned">
+        <strong>{{localize "ffg-star-wars-enhancements.respec.career-unassigned"}}</strong>
+        <span>{{unassigned}}</span>
+    </div>
+
+    <section class="respec-career-group">
+        <h2><i class="fa-solid fa-shield-halved"></i> {{localize "ffg-star-wars-enhancements.respec.career-universal"}}</h2>
+        <div class="respec-career-grid">
+            {{#each universal}}
+            <article class="respec-spec-card" data-search="{{search}}">
+                <h3>{{name}}</h3>
+                <p class="respec-power-list">{{powers}}</p>
+            </article>
+            {{/each}}
+        </div>
+    </section>
+
+    {{#each careers}}
+    <section class="respec-career-group">
+        <h2>
+            {{name}}
+            <span class="respec-power-chips">
+                {{#each powerList}}<span class="respec-power-chip">{{this}}</span>{{/each}}
+            </span>
+        </h2>
+        <div class="respec-career-grid">
+            {{#each specializations}}
+            <article class="respec-spec-card" data-search="{{search}}">
+                <h3>{{name}}</h3>
+                {{#if powers}}<p class="respec-power-list">{{powers}}</p>{{/if}}
+                {{#if note}}<p class="respec-note">{{note}}</p>{{/if}}
+            </article>
+            {{/each}}
+        </div>
+    </section>
+    {{/each}}
+
+    <p class="respec-empty-inline is-hidden" data-career-empty>{{localize "ffg-star-wars-enhancements.respec.careers-empty"}}</p>
+</section>

@@ -22,6 +22,7 @@ import { init as talent_bulk_update_init } from "./scripts/talentsAutomation/tal
 import { stim_sync } from "./scripts/stim_sync.js";
 import { minionsize_sync } from "./scripts/minionsize_sync.js";
 import { register_controls } from "./scripts/controls_layer.js";
+import { init as respec_init, ready as respec_ready } from "./scripts/respec/index.js";
 
 import { init as quench_tests_init } from "./tests/quench.js";
 
@@ -44,6 +45,7 @@ Hooks.once("init", async function () {
     hyperspace_init();
     special_ammo_init();
     special_ammo_hooks();
+    respec_init();
     quench_tests_init(); // Will have no effect unless Quench is active
 
     log("base_module", "registering helpers");
@@ -116,6 +118,7 @@ Hooks.once("ready", async () => {
     shop_sheet_ready();
     dice_helper();
     talent_checker();
+    respec_ready();
     register_hooks();
     await dice_helper_setup();
     hyperspace_ready();

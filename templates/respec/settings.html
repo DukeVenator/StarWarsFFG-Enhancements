@@ -1,0 +1,61 @@
+<section class="respec-app respec-settings" data-respec-settings>
+    <header class="respec-settings-hero">
+        <div class="respec-settings-copy">
+            <span class="respec-kicker">{{localize "ffg-star-wars-enhancements.respec.primer"}}</span>
+            <h1>{{localize "ffg-star-wars-enhancements.respec.settings-title"}}</h1>
+            <p>{{localize "ffg-star-wars-enhancements.respec.settings-subtitle"}}</p>
+        </div>
+        <label class="respec-master-toggle {{#if master}}is-on{{/if}}">
+            <span class="respec-master-copy">
+                <strong>{{masterName}}</strong>
+                <small>{{masterHint}}</small>
+            </span>
+            <input type="checkbox" data-setting="{{masterKey}}" {{#if master}}checked{{/if}}>
+        </label>
+    </header>
+
+    {{#unless master}}
+    <p class="respec-notice">
+        <i class="fa-solid fa-circle-info"></i>
+        {{localize "ffg-star-wars-enhancements.respec.settings-master-off"}}
+    </p>
+    {{/unless}}
+
+    {{#each groups}}
+    <section class="respec-settings-group">
+        <h2><i class="{{icon}}"></i> {{label}} <small>{{hint}}</small></h2>
+        <div class="respec-setting-list">
+            {{#each rows}}
+            <label class="respec-setting {{#if disabled}}is-disabled{{/if}}">
+                <span class="respec-setting-icon"><i class="{{icon}}"></i></span>
+                <span class="respec-setting-copy">
+                    <strong>{{name}}</strong>
+                    <small>{{hint}}</small>
+                </span>
+                <input type="checkbox" data-setting="{{key}}" {{#if value}}checked{{/if}} {{#if disabled}}disabled{{/if}}>
+            </label>
+            {{/each}}
+        </div>
+    </section>
+    {{/each}}
+
+    {{#if unifiedWarning}}
+    <p class="respec-notice is-warn">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        {{localize "ffg-star-wars-enhancements.respec.settings-unified-warning"}}
+    </p>
+    {{/if}}
+
+    <footer class="respec-settings-foot">
+        <button type="button" class="respec-btn respec-btn-primary" data-action="open-tracker" {{#unless master}}disabled{{/unless}}>
+            <i class="fa-solid fa-up-right-from-square"></i> {{localize "ffg-star-wars-enhancements.respec.settings-open-tracker"}}
+        </button>
+        <button type="button" class="respec-btn" data-action="clear-effects">
+            <i class="fa-solid fa-eraser"></i> {{localize "ffg-star-wars-enhancements.respec.settings-clear-effects"}}
+        </button>
+        <button type="button" class="respec-btn respec-btn-ghost" data-action="close">
+            {{localize "ffg-star-wars-enhancements.respec.settings-close"}}
+        </button>
+        <span class="respec-settings-note">{{localize "ffg-star-wars-enhancements.respec.settings-saved"}}</span>
+    </footer>
+</section>

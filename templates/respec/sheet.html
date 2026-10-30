@@ -1,0 +1,111 @@
+<section class="respec-app respec-sheet" data-respec-sheet>
+    <header class="respec-sheet-head">
+        <div class="respec-sheet-title">
+            <span class="respec-kicker">{{localize "ffg-star-wars-enhancements.respec.sheet-kicker"}}</span>
+            <strong>
+                {{#if showPresence}}{{localize "ffg-star-wars-enhancements.respec.sheet-points"}}
+                {{else}}{{#if showPull}}{{localize "ffg-star-wars-enhancements.respec.pull-title"}}{{else}}{{localize "ffg-star-wars-enhancements.respec.sheet-talents"}}{{/if}}{{/if}}
+            </strong>
+        </div>
+        {{#if showPresence}}
+        <span class="respec-threshold-chip is-{{threshold.kind}}">{{threshold.label}}</span>
+        {{/if}}
+        <button type="button" class="respec-icon-btn" data-action="toggle"
+            title='{{localize "ffg-star-wars-enhancements.respec.collapse"}}'>
+            <i class="fa-solid fa-chevron-up"></i>
+        </button>
+    </header>
+
+    <div class="respec-sheet-body">
+        {{#if showPresence}}
+        <div class="respec-sheet-presence">
+            <div class="respec-sheet-presence-head">
+                <span class="respec-label">{{localize "ffg-star-wars-enhancements.respec.col-points"}}</span>
+                <span class="respec-score" title='{{localize "ffg-star-wars-enhancements.respec.pull-score-hint"}}'>{{localize "ffg-star-wars-enhancements.respec.pull-score"}} <strong>{{score}}</strong></span>
+            </div>
+            <div class="respec-pips">
+                {{#each points}}
+                <button type="button" class="respec-pip is-{{state}}" data-action="cycle" data-index="{{index}}"
+                    title="{{label}}" aria-label="{{label}}" {{#unless @root.editable}}disabled{{/unless}}></button>
+                {{/each}}
+            </div>
+            <div class="respec-pips-legend">
+                <span class="is-light">{{localize "ffg-star-wars-enhancements.respec.col-light"}} {{light}}</span>
+                <span class="is-neutral">{{localize "ffg-star-wars-enhancements.respec.col-neutral"}} {{neutral}}</span>
+                <span class="is-dark">{{localize "ffg-star-wars-enhancements.respec.col-dark"}} {{dark}}</span>
+            </div>
+        </div>
+
+        <div class="respec-sheet-stats">
+            <div class="respec-sheet-stat">
+                <span><i class="fa-solid fa-bolt"></i> {{localize "ffg-star-wars-enhancements.respec.col-conflict"}}</span>
+                <strong>{{conflict}}</strong>
+            </div>
+            <div class="respec-sheet-stat">
+                <span><i class="fa-solid fa-feather"></i> {{localize "ffg-star-wars-enhancements.respec.col-tranquility"}}</span>
+                <strong>{{tranquility}}</strong>
+            </div>
+        </div>
+        {{else}}
+        <div class="respec-sheet-stats">
+            <div class="respec-sheet-stat">
+                <span><i class="fa-solid fa-scale-balanced"></i> {{localize "ffg-star-wars-enhancements.respec.col-morality"}}</span>
+                <strong>{{morality}}</strong>
+            </div>
+            <div class="respec-sheet-stat">
+                <span><i class="fa-solid fa-bolt"></i> {{localize "ffg-star-wars-enhancements.respec.col-conflict"}}</span>
+                <strong>{{conflict}}</strong>
+            </div>
+        </div>
+        {{/if}}
+
+        {{#if showPull}}
+        <div class="respec-pull-row">
+            <div class="respec-pull-copy">
+                <span class="respec-label">{{localize "ffg-star-wars-enhancements.respec.first-check"}}</span>
+                <span class="respec-pull-die {{#if pullSpent}}is-used{{/if}}{{#unless hasRoll}} is-no-roll{{/unless}}">
+                    {{#if hasRoll}}
+                    {{#if die.boost}}<img src="{{die.boostImg}}" alt="">{{/if}}
+                    {{#if die.setback}}<img src="{{die.setbackImg}}" alt="">{{/if}}
+                    <strong>{{die.label}}</strong>
+                    {{else}}
+                    <span>{{localize "ffg-star-wars-enhancements.respec.not-rolled"}}</span>
+                    {{/if}}
+                    <em>{{#if hasRoll}}{{#if pullSpent}}{{localize "ffg-star-wars-enhancements.respec.used"}}{{else}}{{localize "ffg-star-wars-enhancements.respec.ready"}}{{/if}}{{else}}{{localize "ffg-star-wars-enhancements.respec.no-roll"}}{{/if}}</em>
+                </span>
+            </div>
+            {{#unless pullSpent}}
+            <button type="button" class="respec-btn respec-btn-primary" data-action="spend" {{#unless editable}}disabled{{/unless}}>
+                <i class="fa-solid fa-check"></i> {{localize "ffg-star-wars-enhancements.respec.pull-mark-spent"}}
+            </button>
+            {{/unless}}
+        </div>
+        {{/if}}
+
+        {{#if showConflict}}
+        <details class="respec-details">
+            <summary>
+                <i class="fa-solid fa-bolt"></i>
+                {{localize "ffg-star-wars-enhancements.respec.sheet-talents"}}
+                {{#if hasTalents}}<span class="respec-count-pill">{{talents.length}}</span>{{/if}}
+            </summary>
+            {{#if hasTalents}}
+            <ul class="respec-talents">
+                {{#each talents}}
+                <li>
+                    <span>{{name}}</span>
+                    <button type="button" class="respec-mini" data-action="conflict" data-talent="{{name}}" {{#unless @root.editable}}disabled{{/unless}}>
+                        {{localize "ffg-star-wars-enhancements.respec.sheet-conflict-button"}}
+                    </button>
+                </li>
+                {{/each}}
+            </ul>
+            {{else}}
+            <p class="respec-hint">{{localize "ffg-star-wars-enhancements.respec.sheet-talents-empty"}}</p>
+            {{/if}}
+        </details>
+        {{/if}}
+
+        {{#if status}}<p class="respec-status">{{status}}</p>{{/if}}
+    </div>
+</section>

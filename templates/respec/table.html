@@ -1,0 +1,66 @@
+<section class="respec-app respec-award" data-respec-award>
+    <header class="respec-award-hero">
+        <div>
+            <span class="respec-kicker">{{localize "ffg-star-wars-enhancements.respec.primer"}}</span>
+            <h1>{{title}}</h1>
+            <p>{{subtitle}}</p>
+        </div>
+        {{#if current}}
+        <div class="respec-award-target">
+            <img src="{{current.img}}" alt="">
+            <div class="respec-award-target-copy">
+                <label for="respec-award-actor">{{localize "ffg-star-wars-enhancements.respec.award-target"}}</label>
+                <select id="respec-award-actor" data-actor-select>
+                    {{#each characters}}
+                    <option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}{{#if players}} — {{players}}{{/if}}</option>
+                    {{/each}}
+                </select>
+            </div>
+        </div>
+        {{/if}}
+    </header>
+
+    {{#if hasCharacters}}
+    <div class="respec-award-totals">
+        <div class="respec-award-total">
+            <span>{{localize "ffg-star-wars-enhancements.respec.col-conflict"}}</span>
+            <strong>{{current.conflict}}</strong>
+        </div>
+        <div class="respec-award-total">
+            <span>{{localize "ffg-star-wars-enhancements.respec.col-tranquility"}}</span>
+            <strong>{{current.tranquility}}</strong>
+        </div>
+        <div class="respec-award-total is-muted">
+            <span>{{#if presence}}{{localize "ffg-star-wars-enhancements.respec.pull-score"}}{{else}}{{localize "ffg-star-wars-enhancements.respec.col-morality"}}{{/if}}</span>
+            <strong>{{#if presence}}{{current.score}}{{else}}{{current.morality}}{{/if}}</strong>
+        </div>
+    </div>
+
+    <div class="respec-award-list">
+        {{#each rows}}
+        <div class="respec-award-row {{#if murder}}is-danger{{/if}}">
+            <div class="respec-award-label">
+                <strong>{{label}}</strong>
+                {{#if range}}<span class="respec-range">{{range}}</span>{{/if}}
+            </div>
+            {{#if ranged}}
+            <input class="respec-input respec-input-small" type="number" data-amount min="{{min}}" max="{{max}}" value="{{min}}" step="1"
+                aria-label="{{label}}">
+            {{else}}
+            {{#unless murder}}<span class="respec-award-fixed">+{{min}}</span>{{/unless}}
+            {{/if}}
+            <button type="button" class="respec-btn {{#if murder}}respec-btn-danger{{else}}respec-btn-primary{{/if}}" data-action="award" data-row="{{id}}">
+                {{#if murder}}{{localize "ffg-star-wars-enhancements.respec.table-flip"}}{{else}}{{localize "ffg-star-wars-enhancements.respec.table-add"}}{{/if}}
+            </button>
+        </div>
+        {{/each}}
+    </div>
+    <p class="respec-hint respec-award-foot">{{localize "ffg-star-wars-enhancements.respec.award-foot"}}</p>
+    {{else}}
+    <section class="respec-empty-state">
+        <i class="fa-solid fa-users"></i>
+        <h2>{{localize "ffg-star-wars-enhancements.respec.no-characters"}}</h2>
+        <p>{{localize "ffg-star-wars-enhancements.respec.no-characters-hint"}}</p>
+    </section>
+    {{/if}}
+</section>
