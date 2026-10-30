@@ -194,43 +194,45 @@
 }
 
 .ffg-star-wars-enhancements-opening-crawl .titles > div > p {
-    margin: 1.35em 0 1.85em 0;
+    margin: 0;
     line-height: 1.35em;
     backface-visibility: hidden;
 }
 
 .ffg-star-wars-enhancements-opening-crawl .titles > div .tcenter {
-    margin: 1.35em 0 -1em 0;
     text-align: center;
 }
 
 .ffg-star-wars-enhancements-opening-crawl .titles > div .episode {
-    margin-bottom: -2em;
+    margin: 0 0 1.6em;
 }
 
 .ffg-star-wars-enhancements-opening-crawl .titles > div .title {
-    transform: scaleY(2);
-    margin-top: 3.5em;
-    margin-bottom: 1.6em;
+    margin: 0 0 2.2em;
+    transform: none;
     text-transform: uppercase;
 }
 
 .ffg-star-wars-enhancements-opening-crawl .titles > div .SWFont {
-    margin-top: 1.35em;
-    margin-bottom: -0.1em;
-    transform: scaleY(1);
+    margin: 0 0 2.2em;
+    transform: none;
     font-weight: normal;
     font-size: 210%;
     font-family: SWCrawlTitle;
+    letter-spacing: 0.04em;
     text-transform: lowercase;
 }
 
 .ffg-star-wars-enhancements-opening-crawl .titles > div .text {
-    line-height: 1.4em;
+    line-height: 1.7em;
+    letter-spacing: 0.04em;
+    word-spacing: normal;
 }
 
 .ffg-star-wars-enhancements-opening-crawl .titles > div .text p {
-    margin: 1em 0;
+    margin: 0 0 1.85em;
+    text-align: justify;
+    text-align-last: start;
 }
 
 .ffg-star-wars-enhancements-opening-crawl .backgroundSpace {
@@ -248,6 +250,24 @@
 
 .ffg-star-wars-enhancements-opening-crawl .backgroundSpace {
     animation: scrolldown var(--intro-ending-duration) var(--intro-ending-delay) forwards;
+}
+
+.ffg-star-wars-enhancements-opening-crawl .backgroundSpace img {
+    position: absolute;
+    left: calc(50% - var(--crawl-image-nudge, 0%));
+    right: auto;
+    bottom: var(--crawl-image-bottom, 1300px);
+    width: min(36vw, 520px);
+    max-width: none;
+    height: auto;
+    transform: translateX(-50%);
+    border: 0;
+}
+
+/* Hold the scroll until its duration matches the measured text, so it does not race ahead. */
+.ffg-star-wars-enhancements-opening-crawl:not(.crawl-timed) .titles > div,
+.ffg-star-wars-enhancements-opening-crawl:not(.crawl-timed) .backgroundSpace {
+    animation-play-state: paused;
 }
 
 @-moz-keyframes introTextAnimation {
@@ -946,4 +966,47 @@
         visibility: hidden;
         opacity: 0;
     }
+}
+
+/* Clone Wars: flatter blue crawl and a blue vignette. The saga type keeps the rules above. */
+.ffg-star-wars-enhancements-opening-crawl.crawl-type-clone-wars {
+    color: #7ecfff;
+    background-color: #02060c;
+}
+
+.ffg-star-wars-enhancements-opening-crawl.crawl-type-clone-wars .backgroundSpace {
+    background:
+        radial-gradient(ellipse at 50% 40%, rgba(16, 56, 110, 0.55), rgba(0, 0, 0, 0.12) 48%, rgba(0, 8, 24, 0.72)),
+        url("../artwork/stars.png") repeat;
+}
+
+.ffg-star-wars-enhancements-opening-crawl.crawl-type-clone-wars .introBackground .intro {
+    color: #9fd6ff;
+    font-size: 320%;
+    text-align: center;
+}
+
+.ffg-star-wars-enhancements-opening-crawl.crawl-type-clone-wars .logo,
+.ffg-star-wars-enhancements-opening-crawl.crawl-type-clone-wars .logo .logoText {
+    color: #061018;
+    font-family: "News Cycle", sans-serif;
+    font-size: 120px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    line-height: 0.9;
+    gap: 0.15em;
+    text-shadow: none;
+    -webkit-text-stroke: 3px #4eb6e8;
+    paint-order: stroke fill;
+}
+
+.ffg-star-wars-enhancements-opening-crawl.crawl-type-clone-wars .titles {
+    text-align: center;
+    transform: perspective(400px) rotateX(12deg);
+}
+
+.ffg-star-wars-enhancements-opening-crawl.crawl-type-clone-wars .titles > div .text,
+.ffg-star-wars-enhancements-opening-crawl.crawl-type-clone-wars .titles > div .text p {
+    text-align: center;
+    text-align-last: center;
 }

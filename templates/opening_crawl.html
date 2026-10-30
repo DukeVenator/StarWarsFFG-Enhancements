@@ -1,4 +1,4 @@
-<div class="ffg-star-wars-enhancements-opening-crawl">
+<div class="ffg-star-wars-enhancements-opening-crawl crawl-type-{{crawlType}}">
     <style>
         :root{
             --intro-text-delay: {{intro_text_delay}}s; /* Time since start */
@@ -17,15 +17,15 @@
     </style>
     <div class="backgroundSpace">
         {{#if image}}
-        <img src="{{image}}" style="position: absolute; bottom: {{img.bottom}}px; right: {{img.right}}%;"/>
+        <img src="{{image}}" alt="" style="--crawl-image-bottom: {{img.bottom}}px; --crawl-image-nudge: {{img.right}}%;"/>
         {{/if}}
     </div>
     <div class="animation">
         <div class="introBackground">
             <div class="intro noselect">
-                {{localize "ffg-star-wars-enhancements.opening-crawl.intro-1"}}
-                <br>
-                {{localize "ffg-star-wars-enhancements.opening-crawl.intro-2"}}
+                {{#each intro as |line|}}
+                {{line}}{{#unless @last}}<br>{{/unless}}
+                {{/each}}
             </div>
         </div>
         <div class="verticalWrapper">
@@ -34,7 +34,9 @@
                 <img class="logoDefault logoSub" src="{{logo}}" style="display: block;">
                 {{else}}
                 <div class="logoSub logoText">
-                    <div>STAR</div><div>WARS</div>
+                    {{#each wordmark as |line|}}
+                    <div>{{line}}</div>
+                    {{/each}}
                 </div>
                 {{/if}}
             </div>

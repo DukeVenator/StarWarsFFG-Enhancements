@@ -1,5 +1,15 @@
 <form>
     <h2>{{localize "ffg-star-wars-enhancements.opening-crawl.new"}}</h2>
+    <div class="form-group">
+        <label>{{localize "ffg-star-wars-enhancements.opening-crawl.type-label"}}</label>
+        <div class="form-fields">
+            <select name="crawl_type">
+                {{#each types as |type|}}
+                <option value="{{type.id}}">{{type.label}}</option>
+                {{/each}}
+            </select>
+        </div>
+    </div>
     <button type="submit" class="create" value="create"><i class="fas fa-plus"></i>{{localize "ffg-star-wars-enhancements.opening-crawl.create-journal"}}</button>
     {{#if journals}}
     <h2 style="margin-top: 1em">{{localize "ffg-star-wars-enhancements.opening-crawl.launch"}}</h2>
@@ -8,7 +18,7 @@
         <div class="form-fields">
             <select name="journal_id">
                 {{#each journals as |journal|}}
-                <option value="{{journal.id}}">{{journal.name}}</option>
+                <option value="{{journal.id}}" data-crawl-type="{{journal.type}}">{{journal.name}} ({{journal.typeLabel}})</option>
                 {{/each}}
             </select>
         </div>

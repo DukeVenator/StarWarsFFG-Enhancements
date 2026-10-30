@@ -1,6 +1,52 @@
 import { setting_image, setting_audio } from "./settings.js";
 import { log_msg as log } from "./util.js";
 
+const CRAWL_FLAG = "crawl-type";
+const DEFAULT_CRAWL_TYPE = "saga";
+
+/**
+ * Crawl styles. A new type is an entry here plus a `.crawl-type-<id>` block in opening_crawl.css.
+ * `intro` keys are localized. `wordmark` is the copyright-safe stand-in used when no logo image is set.
+ */
+const CRAWL_TYPES = {
+    saga: {
+        id: "saga",
+        label: "ffg-star-wars-enhancements.opening-crawl.type-saga",
+        intro: ["ffg-star-wars-enhancements.opening-crawl.intro-1", "ffg-star-wars-enhancements.opening-crawl.intro-2"],
+        wordmark: ["STAR", "WARS"],
+    },
+    "clone-wars": {
+        id: "clone-wars",
+        label: "ffg-star-wars-enhancements.opening-crawl.type-clone-wars",
+        intro: [
+            "ffg-star-wars-enhancements.opening-crawl.type-clone-wars-intro-1",
+            "ffg-star-wars-enhancements.opening-crawl.type-clone-wars-intro-2",
+        ],
+        wordmark: ["CLONE", "WARS"],
+    },
+};
+
+function crawl_type_of(id) {
+    return CRAWL_TYPES[id] ?? CRAWL_TYPES[DEFAULT_CRAWL_TYPE];
+}
+
+function journal_crawl_type(journal) {
+    return crawl_type_of(journal?.getFlag?.("ffg-star-wars-enhancements", CRAWL_FLAG)).id;
+}
+
+function crawl_text(value) {
+    return String(value ?? "")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+function crawl_type_choices() {
+    return Object.values(CRAWL_TYPES).map((type) => ({
+        id: type.id,
+        label: game.i18n.localize(type.label),
+    }));
+}
+
 /**
  * Register settings used by the opening crawl.
  */
@@ -270,6 +316,10 @@ class OpeningCrawlApplication extends HandlebarsApplicationMixin(ApplicationV2) 
         data.intro_crawl_speed = game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-crawl-speed");
         data.intro_pan_delay = game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-pan-delay");
         data.intro_pan_duration = game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-pan-duration");
+        const crawlType = crawl_type_of(data.crawlType);
+        data.crawlType = crawlType.id;
+        data.intro = crawlType.intro.map((key) => game.i18n.localize(key));
+        data.wordmark = crawlType.wordmark;
         return data;
     }
 
@@ -328,6 +378,8 @@ class OpeningCrawlApplication extends HandlebarsApplicationMixin(ApplicationV2) 
         log("opening-crawl", "active listeners");
         super._onRender(context, options);
 
+        this._timeCrawl();
+
         // When music is configured, start playing it (already preloaded)
         if (this.data.music && this.data.sound) {
             // Sound is already preloaded, start playing it
@@ -353,6 +405,50 @@ class OpeningCrawlApplication extends HandlebarsApplicationMixin(ApplicationV2) 
             this.playlist = null;
         }
         return super.close(options);
+    }
+
+    /**
+     * The configured duration is how long the original window-sized crawl took.
+     * Longer text keeps that same pace, so the scroll is extended instead of sped up.
+     */
+    _timeCrawl() {
+        const host = this.element?.jquery ? this.element[0] : this.element;
+        const root = host?.classList?.contains("ffg-star-wars-enhancements-opening-crawl")
+            ? host
+            : host?.querySelector?.(".ffg-star-wars-enhancements-opening-crawl");
+        const titles = root?.querySelector?.(".titles");
+        const content = titles?.querySelector?.(":scope > div");
+        const configured = crawl_scroll_seconds();
+        let seconds = configured;
+        if (titles && content && titles.clientHeight > 0) {
+            const travel = titles.clientHeight + content.offsetHeight;
+            const reference = titles.clientHeight * 1.181524;
+            seconds = configured * Math.max(1, travel / reference);
+        }
+        this.fittedCrawlSeconds = seconds;
+        if (!root) return;
+        root.style.setProperty("--intro-crawl-duration", `${seconds}s`);
+        const ending =
+            opening_crawl_setting("opening-crawl-intro-text-delay") +
+            opening_crawl_setting("opening-crawl-intro-text-duration") +
+            opening_crawl_setting("opening-crawl-intro-crawl-delay") +
+            seconds +
+            opening_crawl_setting("opening-crawl-intro-pan-delay");
+        root.style.setProperty("--intro-ending-delay", `${ending}s`);
+        root.classList.add("crawl-timed");
+    }
+
+    totalIntroSeconds() {
+        const crawl = this.fittedCrawlSeconds ?? crawl_scroll_seconds();
+        return (
+            opening_crawl_setting("opening-crawl-intro-text-delay") +
+            opening_crawl_setting("opening-crawl-intro-text-duration") +
+            opening_crawl_setting("opening-crawl-intro-crawl-delay") +
+            crawl +
+            opening_crawl_setting("opening-crawl-intro-pan-delay") +
+            opening_crawl_setting("opening-crawl-intro-pan-duration") +
+            opening_crawl_setting("opening-crawl-intro-close-delay")
+        );
     }
 }
 
@@ -408,7 +504,7 @@ function parse_journal(journal) {
         log("opening-crawl", "no image to pan to found in journal");
     }
 
-    const body = Array.from(journal_html.querySelectorAll("p"), (paragraph) => paragraph.textContent.trim()).filter((text) => text.length > 0);
+    const body = Array.from(journal_html.querySelectorAll("p"), (paragraph) => crawl_text(paragraph.textContent)).filter((text) => text.length > 0);
 
     if (body.length == 0) {
         ui.notifications.warn(game.i18n.localize("ffg-star-wars-enhancements.opening-crawl.missing-body"));
@@ -416,8 +512,8 @@ function parse_journal(journal) {
     }
 
     return {
-        episode: episode_html.textContent.trim(),
-        title: title_html.textContent.trim(),
+        episode: crawl_text(episode_html.textContent),
+        title: crawl_text(title_html.textContent),
         body: body,
         image: image,
     };
@@ -482,9 +578,9 @@ async function socket_listener(data) {
         // ApplicationV2.render() returns a Promise, not the app. Holding the
         // instance is what lets the timer close the window when the crawl ends.
         const crawl = new OpeningCrawlApplication(data);
-        crawl.render(true);
+        await crawl.render(true);
         if (game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-close-delay") != 0) {
-            await sleep(get_total_intro_duration() * 1000);
+            await sleep(crawl.totalIntroSeconds() * 1000);
             if (!crawl.closing) crawl.close();
         }
     }
@@ -511,13 +607,17 @@ class OpeningCrawlSelectApplication extends HandlebarsApplicationMixin(Applicati
     async _prepareContext(options) {
         let folder = await get_journal_folder();
         let journals = folder.contents.map((journal) => {
+            const type = crawl_type_of(journal.getFlag?.("ffg-star-wars-enhancements", CRAWL_FLAG));
             return {
                 id: journal.id ?? journal._id,
                 name: journal.name,
+                type: type.id,
+                typeLabel: game.i18n.localize(type.label),
             };
         });
 
         return {
+            types: crawl_type_choices(),
             journals: journals,
         };
     }
@@ -541,7 +641,7 @@ class OpeningCrawlSelectApplication extends HandlebarsApplicationMixin(Applicati
         const submitter = event.submitter;
 
         if (submitter?.classList.contains("create")) {
-            create_opening_crawl();
+            create_opening_crawl(formData.get("crawl_type"));
             this.close();
             return;
         }
@@ -563,6 +663,7 @@ class OpeningCrawlSelectApplication extends HandlebarsApplicationMixin(Applicati
             log("opening-crawl", "select | failed to parse journal");
             return;
         }
+        data.crawlType = journal_crawl_type(journal);
 
         this.close();
         launch_opening_crawl(data);
@@ -600,7 +701,8 @@ async function get_journal_folder() {
     return folder;
 }
 
-export async function create_opening_crawl() {
+export async function create_opening_crawl(typeId) {
+    const type = crawl_type_of(typeId);
     let folder = await get_journal_folder();
     let data = {
         name: "Episode X",
@@ -617,9 +719,9 @@ export async function create_opening_crawl() {
             },
         ],
     };
-    JournalEntry.create(data).then((journal) => {
-        journal.sheet.render(true);
-    });
+    const journal = await JournalEntry.create(data);
+    await journal.setFlag("ffg-star-wars-enhancements", CRAWL_FLAG, type.id);
+    journal.sheet.render(true);
 }
 
 function opening_crawl_setting(key) {
@@ -636,18 +738,6 @@ function crawl_scroll_seconds() {
     const adjust = opening_crawl_setting("opening-crawl-intro-crawl-duration-adjust");
     const speed = Number(game.settings.get("ffg-star-wars-enhancements", "opening-crawl-intro-crawl-speed"));
     return (duration + adjust) / (speed > 0 ? speed : 1);
-}
-
-function get_total_intro_duration() {
-    return (
-        opening_crawl_setting("opening-crawl-intro-text-delay") +
-        opening_crawl_setting("opening-crawl-intro-text-duration") +
-        opening_crawl_setting("opening-crawl-intro-crawl-delay") +
-        crawl_scroll_seconds() +
-        opening_crawl_setting("opening-crawl-intro-pan-delay") +
-        opening_crawl_setting("opening-crawl-intro-pan-duration") +
-        opening_crawl_setting("opening-crawl-intro-close-delay")
-    );
 }
 
 /**
