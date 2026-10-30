@@ -1,6 +1,6 @@
 import { log_msg as log } from "../util.js";
 import { thresholdEffectData } from "./presence.js";
-import { MODULE_ID, refreshSurfaces, t } from "./ui.js";
+import { MODULE_ID, ROSTER_KEY, refreshSurfaces, t } from "./ui.js";
 
 const FLAG_KEY = "respec";
 const EFFECT_FLAG = "respecThreshold";
@@ -18,6 +18,7 @@ export const RESPEC = Object.freeze({
     careers: "respec-opt-careers",
     pullRoll: "respec-state-pull-roll",
     encounter: "respec-state-encounter",
+    roster: ROSTER_KEY,
 });
 
 /** Toggle metadata shared by the settings app and registration. */
@@ -193,6 +194,13 @@ export function registerSettings() {
         config: false,
         type: Number,
         default: 1,
+        onChange: () => refreshSurfaces(),
+    });
+    game.settings.register(RESPEC.module, RESPEC.roster, {
+        scope: "world",
+        config: false,
+        type: Array,
+        default: [],
         onChange: () => refreshSurfaces(),
     });
 }

@@ -10,7 +10,13 @@ import {
     pullRollValue,
     RESPEC,
 } from "./settings.js";
-import { assignedCharacters, t } from "./ui.js";
+import {
+    addableCharacters,
+    addSessionCharacter,
+    removeSessionCharacter,
+    sessionCharacters,
+    t,
+} from "./ui.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -48,9 +54,21 @@ class RespecSessionApplication extends HandlebarsApplicationMixin(ApplicationV2)
         const careers = optionOn(RESPEC.careers);
         const conflictUse = optionOn(RESPEC.conflictUse);
         const roll = pullRollValue();
-        const characters = assignedCharacters().map(({ actor, players }) => ({
-            ...characterRow(actor, players),
+        const characters = sessionCharacters().map(({ actor, players, extra }) => ({
+            ...characterRow(actor, players, extra),
             expanded: !this.#collapsed.has(actor.id),
+        }));
+        const added = characters
+            .filter((character) => character.added)
+            .map((character) => ({
+                id: character.id,
+                name: character.name,
+                img: character.img,
+            }));
+        const addable = addableCharacters().map((actor) => ({
+            id: actor.id,
+            name: actor.name,
+            img: actor.img || "icons/svg/mystery-man.svg",
         }));
         if (!this.#initialized) {
             this.#initialized = true;
@@ -73,6 +91,10 @@ class RespecSessionApplication extends HandlebarsApplicationMixin(ApplicationV2)
             conflictUse,
             characters,
             hasCharacters: characters.length > 0,
+            added,
+            addedCount: added.length,
+            addable,
+            hasAddable: addable.length > 0,
             ready,
             used,
             anyEnabled: pull || presence || unified || careers || fear || conflictUse,
@@ -86,6 +108,16 @@ class RespecSessionApplication extends HandlebarsApplicationMixin(ApplicationV2)
         if (root && root.dataset.respecChangeBound !== "true") {
             root.dataset.respecChangeBound = "true";
             root.addEventListener("change", (event) => {
+                const add = event.target.closest("[data-add-character]");
+                if (add) {
+                    const select = add;
+                    addSessionCharacter(select.value)
+                        .catch((error) => log("respec", error))
+                        .finally(() => {
+                            select.value = "";
+                        });
+                    return;
+                }
                 const input = event.target.closest("[data-edit]");
                 if (!input) return;
                 this.#onEdit(input).catch((error) => log("respec", error));
@@ -120,6 +152,9 @@ class RespecSessionApplication extends HandlebarsApplicationMixin(ApplicationV2)
             case "toggle-card":
                 this.#toggleCard(dataset.actorId);
                 return;
+            case "remove-character":
+                await removeSessionCharacter(dataset.actorId);
+                return;
             case "roll-pull":
                 await actions.rollPull();
                 return;
@@ -148,7 +183,7 @@ class RespecSessionApplication extends HandlebarsApplicationMixin(ApplicationV2)
                 await actions.applyThresholds(actor);
                 return;
             case "apply-all":
-                for (const character of assignedCharacters()) await actions.applyThresholds(character.actor);
+                for (const character of sessionCharacters()) await actions.applyThresholds(character.actor);
                 return;
             case "end-session":
                 await actions.endSession();

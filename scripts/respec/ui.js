@@ -3,6 +3,7 @@ import { pullDice } from "./presence.js";
 export const MODULE_ID = "ffg-star-wars-enhancements";
 export const KEY = `${MODULE_ID}.respec`;
 export const STYLE_PATH = `modules/${MODULE_ID}/styles/respec.css`;
+export const ROSTER_KEY = "respec-state-roster";
 
 /** Localize a REspec key. */
 export function t(suffix, data) {
@@ -52,8 +53,58 @@ export function assignedCharacters() {
         .sort((a, b) => a.actor.name.localeCompare(b.actor.name));
 }
 
+/** Actor IDs the GM added manually to this session. */
+export function extraCharacterIds() {
+    try {
+        const ids = game.settings.get(MODULE_ID, ROSTER_KEY);
+        return Array.isArray(ids) ? ids.filter((id) => typeof id === "string" && id) : [];
+    } catch {
+        return [];
+    }
+}
+
+/** Player-assigned characters plus GM-added sheets. */
+export function sessionCharacters() {
+    const byActor = new Map();
+    for (const entry of assignedCharacters()) byActor.set(entry.actor.id, { ...entry, extra: false });
+    for (const id of extraCharacterIds()) {
+        if (byActor.has(id)) continue;
+        const actor = game.actors?.get?.(id);
+        if (actor?.type === "character") byActor.set(id, { actor, players: [], extra: true });
+    }
+    return [...byActor.values()].sort((left, right) => left.actor.name.localeCompare(right.actor.name));
+}
+
+/** Character sheets that are not already in the session. */
+export function addableCharacters() {
+    const known = new Set(sessionCharacters().map((entry) => entry.actor.id));
+    return (game.actors?.contents ?? [])
+        .filter((actor) => actor?.type === "character" && !known.has(actor.id))
+        .sort((left, right) => left.name.localeCompare(right.name));
+}
+
+export async function addSessionCharacter(actorId) {
+    if (!game.user?.isGM || !actorId) return false;
+    const actor = game.actors?.get?.(actorId);
+    if (!actor || actor.type !== "character") return false;
+    if (sessionCharacters().some((entry) => entry.actor.id === actor.id)) return false;
+    const ids = new Set(extraCharacterIds());
+    ids.add(actor.id);
+    await game.settings.set(MODULE_ID, ROSTER_KEY, [...ids]);
+    return true;
+}
+
+export async function removeSessionCharacter(actorId) {
+    if (!game.user?.isGM || !actorId) return false;
+    const current = extraCharacterIds();
+    const ids = current.filter((id) => id !== actorId);
+    if (ids.length === current.length) return false;
+    await game.settings.set(MODULE_ID, ROSTER_KEY, ids);
+    return true;
+}
+
 export function characterActors() {
-    return assignedCharacters().map((entry) => entry.actor);
+    return sessionCharacters().map((entry) => entry.actor);
 }
 
 export function canEdit(actor) {

@@ -22,7 +22,6 @@ import {
 } from "./settings.js";
 import { clampAward } from "./tables.js";
 import {
-    assignedCharacters,
     asNumber,
     canEdit,
     characterActors,
@@ -33,6 +32,7 @@ import {
     forceRating,
     postChat,
     refreshSurfaces,
+    sessionCharacters,
     t,
     wholeCount,
 } from "./ui.js";
@@ -97,7 +97,7 @@ function statusText(flag, dark) {
 }
 
 /** Everything a character card or sheet needs, derived from the actor flag and settings. */
-export function characterRow(actor, players = []) {
+export function characterRow(actor, players = [], extra = false) {
     const flag = flagOf(actor);
     const tally = counts(flag.points);
     const presence = presenceOn();
@@ -116,7 +116,8 @@ export function characterRow(actor, players = []) {
         id: actor.id,
         name: actor.name,
         img: actor.img || "icons/svg/mystery-man.svg",
-        players: players.join(", "),
+        players: players.length ? players.join(", ") : extra ? t("added-manually") : "",
+        added: extra,
         morality,
         conflict: asNumber(actor.system?.conflict?.value),
         tranquility: flag.tranquility,
@@ -152,7 +153,7 @@ export function characterRow(actor, players = []) {
 }
 
 export function getCharacters() {
-    return assignedCharacters().map(({ actor, players }) => characterRow(actor, players));
+    return sessionCharacters().map(({ actor, players, extra }) => characterRow(actor, players, extra));
 }
 
 export function pullSummary() {

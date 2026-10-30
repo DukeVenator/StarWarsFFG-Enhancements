@@ -312,6 +312,43 @@
         </main>
 
         <aside class="respec-side">
+            <section class="respec-panel respec-roster">
+                <h2><i class="fa-solid fa-users"></i> {{localize "ffg-star-wars-enhancements.respec.roster"}}</h2>
+                <div class="respec-kv">
+                    <span>{{localize "ffg-star-wars-enhancements.respec.roster-count"}}</span>
+                    <strong>{{characters.length}}</strong>
+                </div>
+                {{#if addedCount}}
+                <p class="respec-hint">{{localize "ffg-star-wars-enhancements.respec.roster-added" count=addedCount}}</p>
+                <div class="respec-roster-list">
+                    {{#each added}}
+                    <span class="respec-roster-chip">
+                        <img src="{{img}}" alt="">
+                        <span class="respec-roster-name">{{name}}</span>
+                        <button type="button" class="respec-roster-remove" data-action="remove-character" data-actor-id="{{id}}"
+                            title='{{localize "ffg-star-wars-enhancements.respec.remove-character"}}'
+                            aria-label='{{localize "ffg-star-wars-enhancements.respec.remove-character"}}'>
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </span>
+                    {{/each}}
+                </div>
+                {{else}}
+                <p class="respec-hint">{{localize "ffg-star-wars-enhancements.respec.roster-hint"}}</p>
+                {{/if}}
+                {{#if hasAddable}}
+                <label class="respec-roster-add" title='{{localize "ffg-star-wars-enhancements.respec.add-character-hint"}}'>
+                    <i class="fa-solid fa-plus"></i>
+                    <select data-add-character aria-label='{{localize "ffg-star-wars-enhancements.respec.add-character"}}'>
+                        <option value="">{{localize "ffg-star-wars-enhancements.respec.add-character"}}</option>
+                        {{#each addable}}<option value="{{id}}">{{name}}</option>{{/each}}
+                    </select>
+                </label>
+                {{else}}
+                <p class="respec-hint">{{localize "ffg-star-wars-enhancements.respec.roster-full"}}</p>
+                {{/if}}
+            </section>
+
             <section class="respec-panel">
                 <h2><i class="fa-solid fa-clipboard-list"></i> {{localize "ffg-star-wars-enhancements.respec.section-session"}}</h2>
                 <div class="respec-kv"><span>{{localize "ffg-star-wars-enhancements.respec.encounter"}}</span><strong>{{encounter}}</strong></div>

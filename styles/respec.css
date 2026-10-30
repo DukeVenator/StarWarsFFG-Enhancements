@@ -1342,6 +1342,103 @@
     margin-bottom: 7px;
 }
 
+.respec-roster-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 132px;
+    margin-top: 6px;
+    overflow-y: auto;
+}
+
+.respec-roster-chip {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    padding: 3px 4px 3px 6px;
+    border: 1px solid var(--r-line-soft);
+    border-radius: 2px;
+    background: var(--r-panel-2);
+    font-size: 10px;
+}
+
+.respec-roster-chip img {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    border: 1px solid var(--r-line);
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.respec-roster-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--r-text);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.respec-app button.respec-roster-remove {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--r-faint);
+    font-size: 10px;
+}
+
+.respec-app button.respec-roster-remove:hover {
+    background: var(--r-danger-soft);
+    color: var(--r-danger);
+}
+
+.respec-roster-add {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-top: 7px;
+    padding: 3px 8px;
+    border: 1px solid var(--r-line);
+    border-radius: var(--r-radius);
+    background: var(--r-field);
+}
+
+.respec-roster-add:focus-within {
+    border-color: var(--r-focus);
+}
+
+.respec-roster-add i {
+    color: var(--r-gold);
+    font-size: 10px;
+}
+
+.respec-app .respec-roster-add select {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 24px;
+    padding: 0 2px;
+    border: 0;
+    border-radius: 2px;
+    background: var(--r-field);
+    color: var(--r-text);
+    color-scheme: inherit;
+    font-family: inherit;
+    font-size: 11px;
+}
+
+.respec-app .respec-roster-add select option {
+    background: var(--r-panel);
+    color: var(--r-text);
+}
+
+.respec-app .respec-roster-add select:focus {
+    outline: none;
+}
+
 .respec-guide summary {
     display: flex;
     gap: 6px;

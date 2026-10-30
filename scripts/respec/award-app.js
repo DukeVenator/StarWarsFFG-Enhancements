@@ -2,7 +2,7 @@ import { log_msg as log } from "../util.js";
 import { awardRow, characterRow } from "./session.js";
 import { presenceOn } from "./settings.js";
 import { CONFLICT_ROWS, TRANQUILITY_ROWS, findRow, rangeLabel } from "./tables.js";
-import { assignedCharacters, confirmHtml, escapeHtml, t } from "./ui.js";
+import { confirmHtml, escapeHtml, sessionCharacters, t } from "./ui.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -35,7 +35,7 @@ export class AwardDialog extends HandlebarsApplicationMixin(ApplicationV2) {
             },
         });
         this.track = resolved;
-        this.actorId = actorId || assignedCharacters()[0]?.actor.id || "";
+        this.actorId = actorId || sessionCharacters()[0]?.actor.id || "";
         this.#bound = false;
     }
 
@@ -54,8 +54,8 @@ export class AwardDialog extends HandlebarsApplicationMixin(ApplicationV2) {
 
     _prepareContext() {
         const rows = this.track === "conflict" ? CONFLICT_ROWS : TRANQUILITY_ROWS;
-        const characters = assignedCharacters().map(({ actor, players }) => {
-            const row = characterRow(actor, players);
+        const characters = sessionCharacters().map(({ actor, players, extra }) => {
+            const row = characterRow(actor, players, extra);
             return {
                 id: row.id,
                 name: row.name,
