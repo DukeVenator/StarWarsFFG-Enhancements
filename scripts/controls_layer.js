@@ -6,6 +6,9 @@ import { shop_creator } from "./shop.js";
 import { configure_attack_animation, configure_custom_attack_animation } from "./animation.js";
 import { convert_to_hologram } from "./hologram.js";
 import { open_bulk_update_dialog } from "./talentsAutomation/talent_bulk_update.js";
+import { openRespecSession } from "./respec/session-app.js";
+import { openRespecSettings } from "./respec/settings-app.js";
+import { openPartySkills } from "./party_skills/index.js";
 
 export const register_controls = (controls) => {
     if (canvas === null) {
@@ -104,6 +107,33 @@ export const register_controls = (controls) => {
             button: true,
             onChange: async () => {
                 await configure_custom_attack_animation();
+            },
+        };
+        let respecName = game.i18n.localize("ffg-star-wars-enhancements.controls.respec.name");
+        ffg_sw_enhancements_controls.tools[respecName] = {
+            name: respecName,
+            title: game.i18n.localize("ffg-star-wars-enhancements.controls.respec.title"),
+            icon: "fa-solid fa-scale-balanced",
+            button: true,
+            onChange: () => {
+                let enabled = false;
+                try {
+                    enabled = game.settings.get("ffg-star-wars-enhancements", "respec-opt-enable") === true;
+                } catch {
+                    enabled = false;
+                }
+                if (enabled) openRespecSession();
+                else openRespecSettings();
+            },
+        };
+        let partySkillsName = game.i18n.localize("ffg-star-wars-enhancements.controls.party-skills.name");
+        ffg_sw_enhancements_controls.tools[partySkillsName] = {
+            name: partySkillsName,
+            title: game.i18n.localize("ffg-star-wars-enhancements.controls.party-skills.title"),
+            icon: "fa-solid fa-star",
+            button: true,
+            onChange: () => {
+                openPartySkills();
             },
         };
     }
