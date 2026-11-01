@@ -2,7 +2,7 @@ import { log_msg as log } from "../util.js";
 
 // V13 moved these former globals into namespaces; the bare `renderTemplate` /
 // `TextEditor` globals are deprecated and warn until v15. Alias the namespaced
-// versions once — falling back to the global only if the namespace isn't present —
+// versions once, falling back to the global only if the namespace isn't present,
 // so the call sites below stay clean and quiet.
 const renderTemplate = foundry.applications?.handlebars?.renderTemplate ?? globalThis.renderTemplate;
 const TextEditor = foundry.applications?.ux?.TextEditor ?? globalThis.TextEditor;
@@ -65,7 +65,7 @@ export function hooks() {
         // Resolve the ammo result ONCE per message. The computation decrements the
         // magazine, so concurrent re-renders of the SAME message (Dice So Nice's
         // re-render after the 3D roll, chat pop-outs, and the snapshot setFlag's own
-        // re-render) must not each recompute — that would spend several rounds for a
+        // re-render) must not each recompute; that would spend several rounds for a
         // single shot and could even flip a still-loaded weapon to empty.
         // _getAmmoSnapshot shares one in-flight computation per message id and
         // persists the result as a flag, so every later render (incl. after a page
@@ -177,7 +177,7 @@ async function _getAmmoSnapshot(message) {
         if (snapshot && message.author?.id === game.user.id) {
             try {
                 await message.setFlag(MODULE_ID, FLAG_AMMO_RESULT, snapshot);
-            } catch (e) { /* can't persist (e.g. permissions) — still render this session */ }
+            } catch (e) { /* can't persist (e.g. permissions); still render this session */ }
         }
         return snapshot;
     })();
@@ -205,7 +205,7 @@ async function _computeAmmoResult(message) {
 
     // The roll carries a SNAPSHOT of the weapon whose _id is a throwaway/transient
     // id (system 2.0.3 builds the roll from a temporary item). The LIVE weapon is
-    // referenced by uuid — this is exactly how the system itself resolves it to
+    // referenced by uuid, which is exactly how the system itself resolves it to
     // decrement core ammo (roll-builder.js: fromUuid(this.roll.item.uuid)). Resolve
     // by uuid first; fall back to id/name on the speaker's actor for older rolls.
     const weaponUuid = roll.data.uuid || roll.data.flags?.starwarsffg?.uuid;
@@ -236,7 +236,7 @@ async function _computeAmmoResult(message) {
     // Spend a round. With auto-deplete the clip is backed by the item Quantity
     // (each Quantity = one clip of ammoMax): an empty clip is refilled from the
     // spares it is already counted against, and a clip that runs dry chambers the
-    // next spare — so firing never strands ammo. Without auto-deplete the clip just
+    // next spare, so firing never strands ammo. Without auto-deplete the clip just
     // depletes and is reloaded by hand. Only the roll's author mutates state.
     // Quantity is the real ammo counter.
     const _isAuthor = message.author?.id === game.user.id;
@@ -266,7 +266,7 @@ async function _computeAmmoResult(message) {
                 else { qty = 0; }
             }
 
-            // TWO separate writes — both proven to persist in this build. A single
+            // TWO separate writes, both proven to persist in this build. A single
             // update() mixing the dotted system path with a nested flags object did
             // NOT reliably land the flag, which is what stranded clips at 0.
             if (qty !== qty0) await ammoItem.update({ "system.quantity.value": qty });
@@ -279,7 +279,7 @@ async function _computeAmmoResult(message) {
     const magazinesLeft = ammoItem.system?.quantity?.value ?? ammoItem.system?.quantity ?? 0;
     // Enrich each quality's description up front so the chat pill can carry it in a
     // data-tooltip set at render time. Setting the tooltip lazily on mouseenter is
-    // too late — Foundry's tooltip manager already handled the hover.
+    // too late: Foundry's tooltip manager already handled the hover.
     const qualities = await Promise.all((ammoItem.system?.itemmodifier || []).map(async (mod) => {
         const name = mod.name || "";
         const rank = parseInt(mod.system?.rank) || 0;
@@ -335,7 +335,7 @@ function _getValidAmmoItems(weapon) {
 
     // Resolve each filter name to a usable ammo item, recording why a named item is
     // skipped. A gear item qualifies only if it (a) exists in inventory, (b) is type
-    // "gear", and (c) has "Can Be Used As Ammo" enabled on its own sheet — naming it
+    // "gear", and (c) has "Can Be Used As Ammo" enabled on its own sheet. Naming it
     // in the weapon's filter is necessary but NOT sufficient (that flag also stores
     // the magazine size). The skip reasons surface in the console when starwarsffg
     // debug logging is on, turning a silently empty dropdown into an explanation.
@@ -344,23 +344,23 @@ function _getValidAmmoItems(weapon) {
     for (const name of allowedNames) {
         const named = actor.items.filter((i) => i.name.toLowerCase() === name);
         if (named.length === 0) {
-            skipped.push(`"${name}" — no item by that name in inventory`);
+            skipped.push(`"${name}": no item by that name in inventory`);
             continue;
         }
         const gear = named.filter((i) => i.type === "gear");
         if (gear.length === 0) {
-            skipped.push(`"${name}" — exists but is type '${named[0].type}', not 'gear'`);
+            skipped.push(`"${name}": exists but is type '${named[0].type}', not 'gear'`);
             continue;
         }
         const usable = gear.filter((i) => i.getFlag(MODULE_ID, FLAG_AMMO_DATA)?.canBeUsedAsAmmo === true);
         if (usable.length === 0) {
-            skipped.push(`"${name}" — gear item found but "Can Be Used As Ammo" is not enabled on it`);
+            skipped.push(`"${name}": gear item found but "Can Be Used As Ammo" is not enabled on it`);
             continue;
         }
         valid.push(...usable);
     }
     if (skipped.length) {
-        log("special_ammo", `Ammo selector for "${weapon.name}": ${valid.length} usable, ${skipped.length} skipped — ${skipped.join("; ")}`);
+        log("special_ammo", `Ammo selector for "${weapon.name}": ${valid.length} usable, ${skipped.length} skipped: ${skipped.join("; ")}`);
     }
     return valid;
 }
@@ -403,7 +403,7 @@ function _buildCodexMagazine(ammoItem) {
         let next = (Number(data.ammoCurrent) || 0) + dir;
         next = Math.max(0, mx ? Math.min(mx, next) : next);
         try {
-            // Nested-object form (what setFlag uses) — the dotted-string key
+            // Nested-object form (what setFlag uses): the dotted-string key
             // form did NOT persist these flags in this build.
             await ammoItem.update(
                 { flags: { [MODULE_ID]: { [FLAG_AMMO_DATA]: { ...data, ammoCurrent: next } } } },
@@ -424,8 +424,8 @@ function _buildCodexMagazine(ammoItem) {
 /**
  * Show a magazine +/- stepper on the Codex GEAR card (for items flagged as ammo),
  * mirroring the weapon card: a .cdx-ammo block the system CSS reveals (centered)
- * when the card is expanded. The stepper adjusts THIS gear item's ammo-data — it
- * IS the ammo — reusing _buildCodexMagazine. Idempotent: the hook fires on every
+ * when the card is expanded. The stepper adjusts THIS gear item's ammo-data (it
+ * IS the ammo), reusing _buildCodexMagazine. Idempotent: the hook fires on every
  * render, so we never double-inject.
  */
 async function _injectCodexAmmoGear(actor, root) {
@@ -438,10 +438,10 @@ async function _injectCodexAmmoGear(actor, root) {
         const ammoData = gear.getFlag(MODULE_ID, FLAG_AMMO_DATA);
         if (!ammoData?.canBeUsedAsAmmo) continue;
 
-        // Idempotency — the sheet re-renders often; never double-inject.
+        // Idempotency: the sheet re-renders often; never double-inject.
         if (card.querySelector(".cdx-ammo-gear")) continue;
 
-        // Host .cdx-ammo block — the system CSS centers + reveals it on card expand;
+        // Host .cdx-ammo block: the system CSS centers + reveals it on card expand;
         // the .cdx-ammo-gear marker is for idempotency. Clicks are swallowed so
         // adjusting ammo doesn't collapse the card.
         const chip = document.createElement("div");
@@ -500,13 +500,13 @@ async function _injectCodexSpecialAmmo(actor, root) {
         const sa = weapon.getFlag(MODULE_ID, FLAG_SPECIAL_AMMO);
         if (!sa?.hasSpecialAmmo) continue;
 
-        // Idempotency — the sheet re-renders often; never double-inject.
+        // Idempotency: the sheet re-renders often; never double-inject.
         if (card.querySelector(".cdx-ammo-special")) continue;
 
         const validItems = _getValidAmmoItems(weapon);
 
         // If the persisted selection no longer resolves to a valid ammo item,
-        // display it as unselected — but do NOT persist a clear here. Writing
+        // display it as unselected, but do NOT persist a clear here. Writing
         // during the render hook can race and wipe the flag (e.g. before the
         // actor's gear items are ready on initial load). The selection is only
         // ever cleared by an explicit user choice in the selector.
@@ -516,7 +516,7 @@ async function _injectCodexSpecialAmmo(actor, root) {
         }
 
         // Reuse the system's core-ammo chip if present (weapon has config.enableAmmo);
-        // otherwise create one — the system CSS then places + shows it (centered,
+        // otherwise create one; the system CSS then places + shows it (centered,
         // full-width under the card) on expand. The chip is just our host container;
         // the visible UI is the self-contained panel built below.
         let chip = card.querySelector(".cdx-ammo");
@@ -527,7 +527,7 @@ async function _injectCodexSpecialAmmo(actor, root) {
             chip.addEventListener("click", (ev) => ev.stopPropagation());
             card.appendChild(chip);
         } else {
-            // Reusing the system's core chip: hide its "AMMO" label — our panel
+            // Reusing the system's core chip: hide its "AMMO" label; our panel
             // carries its own centered title instead.
             chip.querySelector(".cdx-ammo-k")?.style.setProperty("display", "none");
         }
@@ -559,8 +559,8 @@ async function _injectCodexSpecialAmmo(actor, root) {
             gap: "10px", padding: "8px 10px",
         });
 
-        // Slot holding either the loaded ammo's magazine or — when nothing is loaded
-        // — the system's core stepper, kept inline to the right of the selector. Move
+        // Slot holding either the loaded ammo's magazine or, when nothing is loaded,
+        // the system's core stepper, kept inline to the right of the selector. Move
         // the core stepper (if any) in here; it stays a descendant of .cdx-ammo, so
         // the system's closest(".cdx-ammo") click handler keeps working.
         const stepperSlot = document.createElement("div");
@@ -569,7 +569,7 @@ async function _injectCodexSpecialAmmo(actor, root) {
         const movedCore = chip.querySelector(".cdx-ammo-stepper:not(.cdx-ammo-special-stepper)");
         if (movedCore) stepperSlot.appendChild(movedCore);
 
-        // Selector — a custom dropdown of regular elements (a native <select>
+        // Selector: a custom dropdown of regular elements (a native <select>
         // popup ignores CSS in Foundry's Chromium build and renders unreadable on
         // the dark scheme). All styling is set INLINE and visibility is toggled in
         // JS, so it works regardless of whether any module stylesheet is loaded;
@@ -660,7 +660,7 @@ async function _injectCodexSpecialAmmo(actor, root) {
         const selectAmmo = async (value) => {
             try {
                 const cur = weapon.getFlag(MODULE_ID, FLAG_SPECIAL_AMMO) || {};
-                // Nested-object form (what setFlag uses) — the dotted-string key
+                // Nested-object form (what setFlag uses): the dotted-string key
                 // form does NOT persist this flag. {render:false} keeps the
                 // expanded card from collapsing.
                 await weapon.update(
@@ -721,7 +721,7 @@ async function _injectWeaponAmmoUI(weapon, html) {
     let selectedAmmo = flagData.selectedAmmo || "";
 
     // If the persisted selection doesn't currently resolve to a valid ammo item,
-    // show it as unselected — but do NOT persist a clear here. Writing during the
+    // show it as unselected, but do NOT persist a clear here. Writing during the
     // render hook can race and wipe the flag (e.g. before the actor's gear items are
     // ready on initial load, or while an ammoFilter typo transiently matches none).
     // The selection is only ever cleared by an explicit user choice. Mirrors the
@@ -796,7 +796,7 @@ async function _injectGearAmmoUI(gear, html) {
     const ammoMax = flagData.ammoMax ?? 0;
     const ammoCurrent = flagData.ammoCurrent ?? 0;
 
-    // Progress track for the codex ammo block — only when threshold > 1. Mirrors
+    // Progress track for the codex ammo block, only when threshold > 1. Mirrors
     // the system's _cdxTrack (green → amber → red; pips for small, bar for large).
     let track = null;
     if (canBeUsedAsAmmo && ammoMax > 1) {

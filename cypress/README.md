@@ -4,7 +4,7 @@ The FFG Star Wars Enhancements module uses [Cypress](https://www.cypress.io/) to
 
 ## Overview
 
-Cypress automates front end testing by emulating user interactions within a browser.
+Cypress automates front-end testing by emulating user interactions within a browser.
 
 ## Testing locally
 
@@ -12,7 +12,7 @@ Cypress automates front end testing by emulating user interactions within a brow
 
 Cypress itself does not orchestrate launching FoundryVTT. By default, it expects a fresh FoundryVTT instance to be running on `http://localhost:30001`.
 
-To run Cypress [headless](https://en.wikipedia.org/wiki/Headless_browser) from the commandline:
+To run Cypress [headless](https://en.wikipedia.org/wiki/Headless_browser) from the command line:
 
 ```shell
 # Install dependencies
@@ -22,7 +22,7 @@ npm install
 npx cypress run
 ```
 
-## Testing locally
+## Testing interactively
 
 Running Cypress in its interactive mode can simplify troubleshooting or developing new tests.
 
@@ -52,7 +52,7 @@ The default Cypress configuration can be customized by creating a `cypress.env.j
 ### Docker Compose
 
 To test FoundryVTT with Docker, use the `felddy/foundryvtt` docker image. This is what our GitHub Actions use.
-To make this simpler, a `docker-compose.yaml` has been included in the root of this repository. It can be used to setup/tear-down FoundryVTT for quick testing.
+To make this simpler, a `docker-compose.yaml` has been included in the root of this repository. It can be used to set up and tear down FoundryVTT for quick testing.
 
 ```shell
 
@@ -87,7 +87,7 @@ services:
               protocol: tcp
 ```
 
-## Configuring Github Actions
+## Configuring GitHub Actions
 
 > :warning: The Github Actions use [pull_request_target](https://securitylab.github.com/research/github-actions-preventing-pwn-requests/) and have been carefully configured to protect the FoundryVTT credentials by requiring approval from untrusted forks prior to running tests. If emulating this repository, be very careful.
 

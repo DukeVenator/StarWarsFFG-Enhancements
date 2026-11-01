@@ -312,7 +312,7 @@ function inject_skill_tab_codex(item, html, app) {
         log(feature_name, "Codex talent sheet: no .cdx-tabstrip/.cdx-item-body to add the Associated Skills tab");
         return;
     }
-    // Idempotency — the render hook fires on every render.
+    // Idempotency: the render hook fires on every render.
     if (html.find('.cdx-tab[data-tab="assocskills"]').length) {
         return;
     }

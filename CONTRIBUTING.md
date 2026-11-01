@@ -3,7 +3,7 @@
 **Don't** include assets whose license or copyright conflict with this
 project's MIT license.
 
-**Do** follow [git best practices][1] wherever possible.
+**Do** follow [these git practices][1].
 
 **Do** feel free to pester the project maintainers about the PR if it
 hasn't been responded to. Sometimes notifications can be missed.

@@ -4,10 +4,10 @@ The FFG Star Wars Enhancements module uses [Quench](https://github.com/Ethaks/FV
 
 ## Quench
 
-In practice, FoundryVTT modules are tightly coupled with API provided objects like `game`.
+In practice, FoundryVTT modules are tightly coupled with objects provided by the API, such as `game`.
 There currently are no testing harnesses that provide FoundryVTT API
 [Fakes](https://www.martinfowler.com/articles/mocksArentStubs.html).
-Additionally, the API is under active development, making maintaining mocks within this project cumbersome during major version updates of FoundryVTT.
+The API also changes, which makes maintaining mocks cumbersome during major FoundryVTT version updates.
 For that reason, this project opts for integration tests using Quench.
 
 ## Testing locally
@@ -27,7 +27,7 @@ To test locally:
 
 ## Relationship to Cypress in CI
 
-Quench is a FoundryVTT module that is loaded into the game along side the target module.
+Quench is a FoundryVTT module that is loaded into the game alongside the target module.
 The target module exposes tests, and Quench provides a UI and API to run these tests.
 To execute the tests, FoundryVTT itself needs to be running.
 

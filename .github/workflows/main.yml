@@ -23,7 +23,7 @@
 #
 #   - Is a GitHub release being published?
 #     This workflow will only run when a release is published, not when a
-#     release is updated. Furthermore, note that while a GitHub release will
+#     release is updated. Note that while a GitHub release will
 #     (by default) create a repository tag, a repository tag will not create
 #     or publish a GitHub release.
 #

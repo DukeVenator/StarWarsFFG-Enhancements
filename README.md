@@ -5,7 +5,7 @@ Module intended to provide minor enhancements for the [StarWarsFFG FoundryVTT sy
 ## Scope
 
 This module is designed to supplement the
-[StarWarsFFG FoundryVTT system](https://github.com/StarWarsFoundryVTT/StarWarsFFG). The enhancements included are aimed at providing sane defaults for common workflows which aren't technically part of the core rules, such as: intro crawls, datapads, hyperspace transitions, and attack animations.
+[StarWarsFFG FoundryVTT system](https://github.com/StarWarsFoundryVTT/StarWarsFFG). It covers common workflows the core rules do not define: intro crawls, datapads, hyperspace transitions, and attack animations.
 
 **Note**: We do not aim to include any core-rule features. If it's something the FFG Star Wars system defines in rules, we believe the system module should support it. This module is about enhancing the play experience, not implementing the rules.
 
@@ -34,7 +34,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### What about copyright?
 
-Creating a module like this is tricky - there's a fine line between helpful tweaks and straight-up including copyrighted assets. As such:
+Creating a module like this is tricky: there's a fine line between helpful tweaks and straight-up including copyrighted assets. As such:
 
 -   We specifically exclude any content to which we do not have rights
 -   We provide licensing information for all third party assets we include

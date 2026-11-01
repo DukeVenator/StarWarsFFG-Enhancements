@@ -1,6 +1,6 @@
 # Fonts
 
-To avoid including copywritten fonts, this document tracks the licenses of each
+To avoid including copyrighted fonts, this document tracks the licenses of each
 font included in this project.
 
 | Temporarium | Free alternative to the font used by FFG books. |
