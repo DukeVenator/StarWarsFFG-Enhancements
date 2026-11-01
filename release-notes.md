@@ -1,4 +1,9 @@
 
+`4.3.2`
+
+- Shop: the generator and creator windows now use the vendor's parchment or charcoal body, steel-blue section bars, parchment-gradient cards, and themed checkboxes, so they match the system sheet in both Mandar modes.
+- Shop: theme selection follows the Mandar stylesheet that is actually loaded. Auto mode now matches the light or dark sheet the system chose instead of falling back to the wrong palette.
+
 `4.3.1`
 
 - Shop: deleting an item from a vendor works again. The confirmation dialog now calls DialogV2 through its class instead of a detached function, which threw before the delete ran.
