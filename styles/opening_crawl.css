@@ -106,21 +106,23 @@
     user-select: none;
 }
 
-/* The plane that holds the logo and the text. It lifts and dims during the
-   pan, so the crawl recedes while the planet rises. */
+/* The plane that holds the logo and the text. It dims during the pan so the
+   crawl recedes while the planet rises. Deliberately no transform here: the
+   crawl text is already on a 3D perspective plane, and moving/scaling its
+   parent changes that perspective, which reads as the crawl rotating and
+   produces a visible lurch when the lift ends. The starfield does the camera
+   move; the text keeps its own scroll and fades out. */
 .ffg-star-wars-enhancements-opening-crawl .animation {
     position: absolute;
     inset: 0;
-    transform-origin: 50% 100%;
-    transition: transform 1.6s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 1.2s ease;
+    transition: opacity var(--intro-ending-duration, 7s) ease;
     /* Deliberately not promoted with will-change: the intro, wordmark and crawl
        share this subtree, and a promoted layer could keep the finished intro
        text painted into the crawl's texture. */
 }
 
 .ffg-star-wars-enhancements-opening-crawl.is-panning .animation {
-    transform: translateY(-7vh) scale(1.04);
-    opacity: 0.5;
+    opacity: 0;
 }
 
 .ffg-star-wars-enhancements-opening-crawl .verticalWrapper {
@@ -443,7 +445,7 @@
 }
 
 /* -------------------------------------------------------------------------- */
-/* Criminal Empire — Crimson Dawn                                             */
+/* Criminal Empire: Crimson Dawn                                             */
 /* -------------------------------------------------------------------------- */
 
 .ffg-star-wars-enhancements-opening-crawl.crawl-type-criminal-empire {
@@ -641,10 +643,13 @@
         opacity: 1;
     }
 
+    90% {
+        opacity: 1;
+    }
+
     95% {
         top: 5%;
         transform: translateY(-95%);
-        opacity: 1;
     }
 
     100% {
@@ -691,7 +696,6 @@
     }
 
     .ffg-star-wars-enhancements-opening-crawl.is-panning .animation {
-        transform: none;
-        opacity: 0.75;
+        opacity: 0;
     }
 }
