@@ -588,3 +588,32 @@ test("customers: only player-owned, non-vehicle actors can make the availability
     const { get_player_actors } = await loadShop();
     assert.deepEqual((await get_player_actors()).map((a) => a.name), ["Shopper"]);
 });
+
+/* -------------------------------------------------------------------------- */
+/* Confirmation dialogs                                                       */
+/* -------------------------------------------------------------------------- */
+
+test("confirm: DialogV2 is called as a method, not as a detached function", async () => {
+    // DialogV2.confirm calls this.wait(), so reading the method into a local
+    // variable and calling it loses `this` and throws. That quietly broke both
+    // vendor item deletion and the keep-inventory replacement prompt.
+    install();
+    const calls = [];
+    const DialogV2 = {
+        async confirm(config) {
+            assert.equal(this, DialogV2, "confirm must keep the DialogV2 receiver");
+            calls.push(config);
+            return true;
+        },
+    };
+    globalThis.foundry.applications.api = { DialogV2 };
+    const { shopConfirm } = await loadShop();
+    const answer = await shopConfirm("Remove item", "<p>Remove it?</p>");
+    assert.equal(answer, true);
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].window.title, "Remove item");
+    assert.equal(calls[0].content, "<p>Remove it?</p>");
+    assert.equal(calls[0].modal, true);
+    assert.equal(calls[0].yes.default, true);
+    assert.equal(calls[0].no.default, false);
+});

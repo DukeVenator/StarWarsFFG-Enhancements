@@ -204,6 +204,7 @@
     "ffg-star-wars-enhancements.shop.html.inventory.price": "Price",
     "ffg-star-wars-enhancements.shop.html.inventory.result": "Roll Result",
     "ffg-star-wars-enhancements.shop.html.inventory.delete": "Delete Item",
+    "ffg-star-wars-enhancements.shop.html.inventory.delete-missing": "That item is no longer in the shop.",
     "ffg-star-wars-enhancements.shop.html.inventory.buy": "Buy",
     "ffg-star-wars-enhancements.shop.html.inventory.left": "Left",
     "ffg-star-wars-enhancements.shop.html.inventory.stock": "Stock left in the shop",

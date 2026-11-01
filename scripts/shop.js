@@ -417,9 +417,17 @@ export function shopThemeClass() {
 }
 
 export async function shopConfirm(title, content) {
-    const confirm = foundry.applications?.api?.DialogV2?.confirm;
-    if (confirm) return confirm({ window: { title }, content, modal: true });
-    return Dialog.confirm({ title, content });
+    const DialogV2 = foundry.applications?.api?.DialogV2;
+    if (DialogV2?.confirm) {
+        return DialogV2.confirm({
+            window: { title },
+            content,
+            modal: true,
+            yes: { default: true },
+            no: { default: false },
+        });
+    }
+    return Dialog.confirm({ title, content, defaultYes: true });
 }
 
 export function applyShopWindowTheme(app) {
@@ -654,42 +662,44 @@ class ShopGenerator extends ShopFormBase {
             data["tags_must_contain"],
             data["tags_must_not_contain"],
         );
-        const keep_inventory = data["keep_existing"];
+        const keep_inventory = Boolean(data["keep_existing"]);
         let inventory = await myshop.shop();
 
         /* set the store data as a flag on the actor we got passed in (assuming one was) */
         log(module_name, "Shop generation completed with " + inventory.length + " items, preparing to update actor");
         let actor_id = this.actor_id;
         let vendor = game.actors.get(actor_id);
-        // modify the inventory format into the flag format
+        const current_inventory = vendor.items.filter((item) => item);
+        const current_by_name = new Map(current_inventory.map((item) => [item.name, item]));
+        const current_flag = vendor.getFlag("ffg-star-wars-enhancements", "vendor-data")?.items ?? {};
+
+        // Keep the stored prices and rolls for items that survive a "keep inventory" regeneration.
         let flag_data = {};
-        // this is a different iteration than the one below because we trigger a data update on the lower one and
-        // we want the flag set before we trigger that
-        for (let x = 0; x < inventory.length; x++) {
-            let item = inventory[x];
-            flag_data[item.item.name] = {
-                price: item.price,
-                msrp: item.msrp,
-                roll: item.roll,
-                dice_string: item.dice_string,
-                image: item.item.image,
-                compendium: item.item.compendium,
-                flagged_id: item.item.id,
-                restricted: item.item.restricted,
-            };
+        if (keep_inventory) {
+            for (const [name, entry] of Object.entries(current_flag)) {
+                if (current_by_name.has(name)) flag_data[name] = entry;
+            }
         }
-        // set up to delete items from the vendor
-        let to_delete = [];
-        let current_inventory = vendor.items.filter((item) => item);
-        for (let x = 0; x < current_inventory.length; x++) {
-            to_delete.push(current_inventory[x].id);
-        }
-        // set up to create the items for the vendor
+
+        // Set up the items to add. A kept item already supplies its name; adding a second copy
+        // would make the name-keyed flag and the stock controls ambiguous.
         let to_create = [];
-        for (let x = 0; x < inventory.length; x++) {
-            let item = inventory[x].item;
-            let item_ffg = await game.packs.get(item.compendium).getDocument(item.id);
-            to_create.push(item_ffg);
+        for (const entry of inventory) {
+            const name = entry.item.name;
+            if (keep_inventory && current_by_name.has(name)) continue;
+            if (keep_inventory && Object.prototype.hasOwnProperty.call(flag_data, name)) continue;
+            flag_data[name] = {
+                price: entry.price,
+                msrp: entry.msrp,
+                roll: entry.roll,
+                dice_string: entry.dice_string,
+                image: entry.item.image,
+                compendium: entry.item.compendium,
+                flagged_id: entry.item.id,
+                restricted: entry.item.restricted,
+            };
+            const item_ffg = await game.packs.get(entry.item.compendium).getDocument(entry.item.id);
+            if (item_ffg) to_create.push(item_ffg);
         }
 
         // add the price modifier so we can apply it to drag-and-dropped items
@@ -718,9 +728,7 @@ class ShopGenerator extends ShopFormBase {
             var price_modifier = 1;
         }
 
-        await vendor.unsetFlag("ffg-star-wars-enhancements", "vendor-data");
-
-        flag_data = {
+        const flag_payload = {
             items: flag_data,
             meta: {
                 base_price: parseInt(data["shop_base_price"]),
@@ -738,16 +746,16 @@ class ShopGenerator extends ShopFormBase {
             },
         };
         // set the extended data as a flag
-        log(module_name, "Setting flag data: " + JSON.stringify(flag_data));
+        log(module_name, "Setting flag data: " + JSON.stringify(flag_payload));
         // actually set the flag data
-        await vendor.setFlag("ffg-star-wars-enhancements", "vendor-data", flag_data);
+        await vendor.setFlag("ffg-star-wars-enhancements", "vendor-data", flag_payload);
 
-        if (!keep_inventory) {
+        if (!keep_inventory && current_inventory.length) {
             // actually delete the old items
-            await vendor.deleteEmbeddedDocuments("Item", to_delete);
+            await vendor.deleteEmbeddedDocuments("Item", current_inventory.map((item) => item.id));
         }
         // actually create the new items
-        await vendor.createEmbeddedDocuments("Item", to_create);
+        if (to_create.length) await vendor.createEmbeddedDocuments("Item", to_create);
         if (vendor.sheet) await vendor.sheet.render(true);
     }
 }

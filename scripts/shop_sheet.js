@@ -732,21 +732,21 @@ function defineVendor() {
         this._bindInventoryBrowser(html);
         this._bindShopLayout(html);
         // buy item
-        html.find(".item-buy").click((ev) => this._buy_item(ev));
-        html.find(".sw-shop-stock-qty").on("change", (ev) => this._set_stock(ev));
-        html.find(".sw-shop-stock-qty").on("input", (ev) => ev.stopPropagation());
+        html.on("click", ".item-buy", (ev) => this._buy_item(ev));
+        html.on("change", ".sw-shop-stock-qty", (ev) => this._set_stock(ev));
+        html.on("input", ".sw-shop-stock-qty", (ev) => ev.stopPropagation());
         // remove item from inventory
-        html.find(".item-remove").click((ev) => this._remove_item(ev));
+        html.on("click", ".item-remove", (ev) => this._remove_item(ev));
         // refresh inventory
-        html.find(".refresh").click((ev) => this._refresh_stock(ev));
+        html.on("click", ".refresh", (ev) => this._refresh_stock(ev));
         // show to players inventory
-        html.find(".show-to-players").click((ev) => this._show_to_players(ev));
+        html.on("click", ".show-to-players", (ev) => this._show_to_players(ev));
 
         // Copied code from the character sheet, because original item-edit
         // handler is only applied if the user is an owner of the actor. Since
         // vendors are assigned as observers, not owners, we need to duplicate
         // the code in this hook.
-        html.find(".item-view").click(async (ev) => {
+        html.on("click", ".item-view", async (ev) => {
             ev.preventDefault();
             ev.stopPropagation();
             const li = $(ev.currentTarget).parents(".item");
@@ -1034,22 +1034,31 @@ function defineVendor() {
         event.stopPropagation();
         const card = $(event.currentTarget).closest(".item");
         const itemName = card.attr("data-item-name");
-        const itemId = await find_item_id(this.document.id, itemName);
+        const itemId = card.attr("data-item-embedded") || (await find_item_id(this.document.id, itemName));
         if (!itemId) return;
         const stock = Math.max(0, parseInt(event.currentTarget.value, 10) || 0);
         await game.actors.get(this.document.id).updateEmbeddedDocuments("Item", [{ _id: itemId, "system.quantity.value": stock }]);
     }
 
-    async _remove_item(event, all = 0) {
+    async _remove_item(event) {
         event.preventDefault();
-        let item_name = $(event.currentTarget).parents(".item").attr("data-item-name");
+        event.stopPropagation();
+        const card = $(event.currentTarget).closest(".item");
+        const itemName = card.attr("data-item-name");
+        const actor = this.actor ?? game.actors.get(this.document.id);
+        const itemId = card.attr("data-item-embedded") || (await find_item_id(actor?.id, itemName));
+        const item = itemId ? actor?.items?.get(itemId) : null;
+        if (!item) {
+            ui.notifications.warn(game.i18n.localize("ffg-star-wars-enhancements.shop.html.inventory.delete-missing"));
+            return;
+        }
         const confirmed = await shopConfirm(
             game.i18n.localize("ffg-star-wars-enhancements.shop.html.inventory.confirm-delete.title"),
-            `<p>${game.i18n.format("ffg-star-wars-enhancements.shop.html.inventory.confirm-delete.content", { name: item_name })}</p>`,
+            `<p>${game.i18n.format("ffg-star-wars-enhancements.shop.html.inventory.confirm-delete.content", { name: item.name })}</p>`,
         );
         if (!confirmed) return;
-        let item_id = await find_item_id(this.document.id, item_name);
-        await game.actors.get(this.document.id).deleteEmbeddedDocuments("Item", [item_id]);
+        await actor.deleteEmbeddedDocuments("Item", [item.id]);
+        if (this.rendered) this.render(false);
     }
 
     async _refresh_stock(event, all = 0) {
