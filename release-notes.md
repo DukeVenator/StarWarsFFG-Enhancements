@@ -1,4 +1,10 @@
 
+`4.3.1`
+
+- Shop: deleting an item from a vendor works again. The confirmation dialog now calls DialogV2 through its class instead of a detached function, which threw before the delete ran.
+- Shop: regenerating with Keep existing inventory off now opens the replace prompt and replaces the stock. With it on, existing items keep their stored prices and rolls, and generated duplicates are skipped instead of being added a second time.
+- Shop: item actions keep working after searching or re-sorting the vendor inventory.
+
 `4.3.0`
 
 - REspec roster: player-assigned characters are listed automatically, and any other character sheet can be added from the Characters panel. Added sheets persist in a world setting, can be removed from their roster chip, and appear in cards, Pull chat, awards, Apply all, End session, and `getCharacters`.
