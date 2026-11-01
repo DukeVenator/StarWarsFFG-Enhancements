@@ -590,6 +590,41 @@ test("customers: only player-owned, non-vehicle actors can make the availability
 });
 
 /* -------------------------------------------------------------------------- */
+/* Theme selection                                                            */
+/* -------------------------------------------------------------------------- */
+
+test("theme: the loaded Mandar stylesheet wins over the ui-darkmode setting", async () => {
+    install();
+    const links = [{ href: "https://example.test/systems/starwarsffg/styles/mandar-dark.css", disabled: false }];
+    globalThis.document = {
+        querySelectorAll: () => links,
+        body: { classList: { contains: () => false } },
+    };
+    await game.settings.set("starwarsffg", "ui-darkmode", "off");
+    const { shopThemeClass } = await loadShop();
+    assert.equal(shopThemeClass(), "sw-shop--dark");
+
+    links[0] = { href: "https://example.test/systems/starwarsffg/styles/mandar.css", disabled: false };
+    await game.settings.set("starwarsffg", "ui-darkmode", "on");
+    assert.equal(shopThemeClass(), "sw-shop--light");
+});
+
+test("theme: the explicit setting and core theme are fallbacks when Mandar is not loaded", async () => {
+    install();
+    globalThis.document = {
+        querySelectorAll: () => [],
+        body: { classList: { contains: () => false } },
+    };
+    await game.settings.set("starwarsffg", "ui-darkmode", "on");
+    const { shopThemeClass } = await loadShop();
+    assert.equal(shopThemeClass(), "sw-shop--dark");
+
+    await game.settings.set("starwarsffg", "ui-darkmode", "auto");
+    globalThis.document.body.classList.contains = (name) => name === "theme-light";
+    assert.equal(shopThemeClass(), "sw-shop--light");
+});
+
+/* -------------------------------------------------------------------------- */
 /* Confirmation dialogs                                                       */
 /* -------------------------------------------------------------------------- */
 

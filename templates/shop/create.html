@@ -1,10 +1,12 @@
 <form class="sw-shop {{themeClass}}">
     <style>@import url("/modules/ffg-star-wars-enhancements/styles/shop_generator_vendor.css");</style>
-    <h2>{{localize "ffg-star-wars-enhancements.shop.html.create.title"}}</h2>
-    <div class="form-group sw-shop-stack">
-        <label for="actor_name">{{localize "ffg-star-wars-enhancements.shop.html.create.shop-name"}}</label>
-        <input id="actor_name" name="actor_name" type="text" value="vendor">
-    </div>
-    <p class="sw-shop-helper">{{localize "ffg-star-wars-enhancements.shop.html.create.helper"}}</p>
+    <section class="sw-shop-section">
+        <h3>{{localize "ffg-star-wars-enhancements.shop.html.create.title"}}</h3>
+        <div class="form-group sw-shop-stack">
+            <label for="actor_name">{{localize "ffg-star-wars-enhancements.shop.html.create.shop-name"}}</label>
+            <input id="actor_name" name="actor_name" type="text" value="vendor">
+        </div>
+        <p class="sw-shop-helper">{{localize "ffg-star-wars-enhancements.shop.html.create.helper"}}</p>
+    </section>
     <button class="create sw-shop-submit" type="submit" value="create"><i class="fas fa-plus"></i>{{localize "ffg-star-wars-enhancements.shop.html.create.button"}}</button>
 </form>

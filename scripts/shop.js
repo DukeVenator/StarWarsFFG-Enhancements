@@ -403,8 +403,17 @@ async function get_player_actors() {
 
 const SHOP_THEME_CLASSES = ["sw-shop--dark", "sw-shop--light"];
 
-/* Explicit system dark-mode wins. "auto" leaves the Foundry theme selectors in charge. */
+/* Follow the stylesheet the system actually loaded. In auto mode the ui-darkmode
+ * setting does not say which Mandar file won, and Foundry's body theme can differ
+ * from it. Fall back to the setting, then to the core theme classes. */
 export function shopThemeClass() {
+    if (typeof document !== "undefined" && typeof document.querySelectorAll === "function") {
+        const links = [...document.querySelectorAll('link[rel="stylesheet"]')];
+        const active = (fragment) => links.some((link) => link.href.includes(fragment) && !link.disabled);
+        if (active("mandar-dark.css")) return "sw-shop--dark";
+        if (active("mandar.css")) return "sw-shop--light";
+    }
+
     let mode = "auto";
     try {
         mode = game.settings.get(game.system.id, "ui-darkmode") ?? "auto";
@@ -413,6 +422,11 @@ export function shopThemeClass() {
     }
     if (mode === "on") return "sw-shop--dark";
     if (mode === "off") return "sw-shop--light";
+
+    if (typeof document !== "undefined") {
+        if (document.body?.classList.contains("theme-dark")) return "sw-shop--dark";
+        if (document.body?.classList.contains("theme-light")) return "sw-shop--light";
+    }
     return "";
 }
 

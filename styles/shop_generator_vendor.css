@@ -15,6 +15,7 @@
     --sw-shop-danger: #8c2f2f;
     --sw-shop-scan: rgba(12, 110, 114, 0.06);
     --sw-shop-button-fg: #f3ffff;
+    color-scheme: light;
 }
 
 :root[data-theme="dark"] .sw-shop:not(.sw-shop--light),
@@ -1199,6 +1200,7 @@ body.dark .sw-shop-window:not(.sw-shop--light),
     --sw-shop-danger: #8c2f2f;
     --sw-shop-scan: transparent;
     --sw-shop-button-fg: #ffffff;
+    color-scheme: light;
 }
 
 .window-app.vendor.sw-shop-window.sw-shop--dark,
@@ -1465,10 +1467,10 @@ body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) select,
 }
 
 /* Create and regenerate use the same sheet palette as the vendor inventory. */
-.window-app.sw-shop-window:not(.vendor),
-.window-app.sw-shop-window:not(.vendor) .sw-shop,
-.window-app.sw-shop-window.sw-shop--light:not(.vendor),
-.window-app.sw-shop-window.sw-shop--light:not(.vendor) .sw-shop {
+:is(.window-app, .application).sw-shop-window:not(.vendor),
+:is(.window-app, .application).sw-shop-window:not(.vendor) .sw-shop,
+:is(.window-app, .application).sw-shop-window.sw-shop--light:not(.vendor),
+:is(.window-app, .application).sw-shop-window.sw-shop--light:not(.vendor) .sw-shop {
     --sw-shop-bg: #d8cbc0;
     --sw-shop-fg: #191813;
     --sw-shop-muted: #3d3832;
@@ -1480,16 +1482,17 @@ body.dark .window-app.vendor .sw-shop:not(.sw-shop--light) select,
     --sw-shop-danger: #8c2f2f;
     --sw-shop-scan: transparent;
     --sw-shop-button-fg: #ffffff;
+    color-scheme: light;
 }
 
-.window-app.sw-shop-window.sw-shop--dark:not(.vendor),
-.window-app.sw-shop-window.sw-shop--dark:not(.vendor) .sw-shop,
-:root[data-theme="dark"] .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light),
-:root[data-theme="dark"] .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop:not(.sw-shop--light),
-body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light),
-body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop:not(.sw-shop--light),
-.app.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light),
-.app.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop:not(.sw-shop--light) {
+:is(.window-app, .application).sw-shop-window.sw-shop--dark:not(.vendor),
+:is(.window-app, .application).sw-shop-window.sw-shop--dark:not(.vendor) .sw-shop,
+:root[data-theme="dark"] :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light),
+:root[data-theme="dark"] :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop:not(.sw-shop--light),
+body.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light),
+body.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop:not(.sw-shop--light),
+.app.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light),
+.app.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop:not(.sw-shop--light) {
     --sw-shop-bg: #0f0f0f;
     --sw-shop-fg: #f5f5f5;
     --sw-shop-muted: #d0d0d0;
@@ -1504,29 +1507,30 @@ body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop:
     color-scheme: dark;
 }
 
-.window-app.sw-shop-window:not(.vendor) .window-content {
+:is(.window-app, .application).sw-shop-window:not(.vendor) .window-content {
     background: var(--sw-shop-bg);
     background-image: none;
     color: var(--sw-shop-fg);
+    padding: 0;
 }
 
-.window-app.sw-shop-window:not(.vendor) .sw-shop {
+:is(.window-app, .application).sw-shop-window:not(.vendor) .sw-shop {
     background: var(--sw-shop-bg);
     color: var(--sw-shop-fg);
     font-family: Roboto, "Segoe UI", sans-serif;
 }
 
-.window-app.sw-shop-window:not(.vendor) .sw-shop-flourish {
+:is(.window-app, .application).sw-shop-window:not(.vendor) .sw-shop-flourish {
     display: none;
 }
 
-.window-app.sw-shop-window:not(.vendor) .sw-shop h2,
-.window-app.sw-shop-window:not(.vendor) .sw-shop-section h3 {
+:is(.window-app, .application).sw-shop-window:not(.vendor) .sw-shop h2,
+:is(.window-app, .application).sw-shop-window:not(.vendor) .sw-shop-section h3 {
     margin: 0 0 0.7rem;
-    padding: 3px 8px;
+    padding: 4px 8px;
     border: 0;
     border-bottom: 1px solid rgba(0, 0, 0, 0.25);
-    background: rgba(73, 12, 11, 0.85);
+    background: #490c0b;
     color: #fff;
     font-family: Roboto, "Segoe UI", sans-serif;
     font-size: 12px;
@@ -1535,34 +1539,36 @@ body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop:
     text-transform: uppercase;
 }
 
-.window-app.sw-shop-window:not(.vendor) .sw-shop-section {
+:is(.window-app, .application).sw-shop-window:not(.vendor) .sw-shop-section {
     margin: 0 0 0.75rem;
     padding: 0 0 0.65rem;
-    border: 2px solid #3f3832;
+    border: 2px solid #415064;
     border-radius: 4px;
-    background: #fffaf4;
+    background: linear-gradient(180deg, #f5f0e4 0%, #ebe3d0 100%);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
     overflow: hidden;
 }
 
-.window-app.sw-shop-window:not(.vendor) .sw-shop-section h3 {
+:is(.window-app, .application).sw-shop-window:not(.vendor) .sw-shop-section h3 {
     margin: 0 0 0.55rem;
     border-radius: 0;
+    background: #415064;
 }
 
-.window-app.sw-shop-window:not(.vendor) .sw-shop .form-group {
+:is(.window-app, .application).sw-shop-window:not(.vendor) .sw-shop .form-group {
     padding: 0 0.65rem;
 }
 
-.window-app.sw-shop-window:not(.vendor) .window-content .sw-shop .form-group label {
+:is(.window-app, .application).sw-shop-window:not(.vendor) .window-content .sw-shop .form-group label {
     color: var(--sw-shop-fg);
     font-family: Roboto, "Segoe UI", sans-serif;
     font-size: 0.85rem;
 }
 
-.window-app.sw-shop-window:not(.vendor) .window-content .sw-shop input[type="text"],
-.window-app.sw-shop-window:not(.vendor) .window-content .sw-shop input[type="number"],
-.window-app.sw-shop-window:not(.vendor) .window-content .sw-shop input[type="search"],
-.window-app.sw-shop-window:not(.vendor) .window-content .sw-shop select {
+:is(.window-app, .application).sw-shop-window:not(.vendor) .window-content .sw-shop input[type="text"],
+:is(.window-app, .application).sw-shop-window:not(.vendor) .window-content .sw-shop input[type="number"],
+:is(.window-app, .application).sw-shop-window:not(.vendor) .window-content .sw-shop input[type="search"],
+:is(.window-app, .application).sw-shop-window:not(.vendor) .window-content .sw-shop select {
     width: 100% !important;
     border: 2px solid #3f3832;
     border-radius: 3px;
@@ -1571,20 +1577,47 @@ body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop:
     font-family: Roboto, "Segoe UI", sans-serif;
 }
 
-.window-app.sw-shop-window:not(.vendor) .window-content .sw-shop input[type="text"]:focus,
-.window-app.sw-shop-window:not(.vendor) .window-content .sw-shop input[type="number"]:focus,
-.window-app.sw-shop-window:not(.vendor) .window-content .sw-shop select:focus {
+:is(.window-app, .application).sw-shop-window:not(.vendor) .window-content .sw-shop input[type="text"]:focus,
+:is(.window-app, .application).sw-shop-window:not(.vendor) .window-content .sw-shop input[type="number"]:focus,
+:is(.window-app, .application).sw-shop-window:not(.vendor) .window-content .sw-shop select:focus {
     border-color: #490c0b;
     outline: 3px solid #1b1b1b;
     outline-offset: 2px;
     box-shadow: none;
 }
 
-.window-app.sw-shop-window:not(.vendor) .sw-shop input[type="checkbox"] {
-    accent-color: #490c0b;
+:is(.window-app, .application).sw-shop-window:not(.vendor) .sw-shop input[type="checkbox"] {
+    appearance: none;
+    display: inline-grid;
+    width: 1.1rem;
+    height: 1.1rem;
+    margin: 0;
+    border: 2px solid #3f3832;
+    border-radius: 2px;
+    background: #ffffff;
+    color: #490c0b;
+    cursor: pointer;
+    place-content: center;
 }
 
-.window-app.sw-shop-window:not(.vendor) .sw-shop-tag {
+:is(.window-app, .application).sw-shop-window:not(.vendor) .sw-shop input[type="checkbox"]::before {
+    content: "";
+    width: 0.55rem;
+    height: 0.55rem;
+    background: #490c0b;
+    transform: scale(0);
+    transition: transform 80ms ease-in;
+}
+
+:is(.window-app, .application).sw-shop-window:not(.vendor) .sw-shop input[type="checkbox"]:checked::before {
+    transform: scale(1);
+}
+
+:is(.window-app, .application).sw-shop-window:not(.vendor) .sw-shop input[type="checkbox"]::after {
+    content: none;
+}
+
+:is(.window-app, .application).sw-shop-window:not(.vendor) .sw-shop-tag {
     border: 1px solid #9f9275;
     border-bottom: 2px dotted #666;
     border-radius: 12px;
@@ -1594,7 +1627,7 @@ body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop:
     font-size: 0.72rem;
 }
 
-.window-app.sw-shop-window:not(.vendor) .window-content button.sw-shop-tag-remove {
+:is(.window-app, .application).sw-shop-window:not(.vendor) .window-content button.sw-shop-tag-remove {
     width: auto !important;
     margin: 0;
     padding: 0 0.25rem;
@@ -1604,12 +1637,13 @@ body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop:
     color: inherit;
 }
 
-.window-app.sw-shop-window:not(.vendor) .sw-shop-helper {
+:is(.window-app, .application).sw-shop-window:not(.vendor) .sw-shop-helper {
+    margin: 0.2rem 0.65rem 0.8rem;
     color: var(--sw-shop-muted);
     font-family: Roboto, "Segoe UI", sans-serif;
 }
 
-.window-app.sw-shop-window:not(.vendor) .window-content button.sw-shop-submit {
+:is(.window-app, .application).sw-shop-window:not(.vendor) .window-content button.sw-shop-submit {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1627,58 +1661,81 @@ body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop:
     text-transform: uppercase;
 }
 
-.window-app.sw-shop-window:not(.vendor) .window-content button.sw-shop-submit:hover {
+:is(.window-app, .application).sw-shop-window:not(.vendor) .window-content button.sw-shop-submit:hover {
     background: #6d1614;
     color: #fff;
     filter: none;
 }
 
-.window-app.sw-shop-window.sw-shop--dark:not(.vendor) .sw-shop-section,
-:root[data-theme="dark"] .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop-section,
-body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop-section,
-.app.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop-section {
-    border-color: #d0d0d0;
-    background: #141414;
+:is(.window-app, .application).sw-shop-window.sw-shop--dark:not(.vendor) .sw-shop-section,
+:root[data-theme="dark"] :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop-section,
+body.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop-section,
+.app.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop-section {
+    border-color: #415064;
+    background: linear-gradient(180deg, #141a22 0%, #0d1218 100%);
 }
 
-.window-app.sw-shop-window.sw-shop--dark:not(.vendor) .sw-shop-tag,
-:root[data-theme="dark"] .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop-tag,
-body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop-tag,
-.app.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop-tag {
+:is(.window-app, .application).sw-shop-window.sw-shop--dark:not(.vendor) .sw-shop-section h3,
+:root[data-theme="dark"] :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop-section h3,
+body.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop-section h3,
+.app.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop-section h3 {
+    background: #2a3a4a;
+}
+
+:is(.window-app, .application).sw-shop-window.sw-shop--dark:not(.vendor) .sw-shop input[type="checkbox"],
+:root[data-theme="dark"] :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop input[type="checkbox"],
+body.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop input[type="checkbox"],
+.app.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop input[type="checkbox"] {
+    border-color: #d0d0d0;
+    background: #1a1a1a;
+    color: #f5f5f5;
+}
+
+:is(.window-app, .application).sw-shop-window.sw-shop--dark:not(.vendor) .sw-shop input[type="checkbox"]::before,
+:root[data-theme="dark"] :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop input[type="checkbox"]::before,
+body.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop input[type="checkbox"]::before,
+.app.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop input[type="checkbox"]::before {
+    background: #f5f5f5;
+}
+
+:is(.window-app, .application).sw-shop-window.sw-shop--dark:not(.vendor) .sw-shop-tag,
+:root[data-theme="dark"] :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop-tag,
+body.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop-tag,
+.app.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .sw-shop-tag {
     border-color: #d0d0d0;
     border-bottom-color: #d0d0d0;
     background: #2a2a2a;
     color: #ffffff;
 }
 
-.window-app.sw-shop-window.sw-shop--dark:not(.vendor) .window-content .sw-shop input[type="text"],
-.window-app.sw-shop-window.sw-shop--dark:not(.vendor) .window-content .sw-shop input[type="number"],
-.window-app.sw-shop-window.sw-shop--dark:not(.vendor) .window-content .sw-shop input[type="search"],
-.window-app.sw-shop-window.sw-shop--dark:not(.vendor) .window-content .sw-shop select,
-:root[data-theme="dark"] .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="text"],
-:root[data-theme="dark"] .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="number"],
-:root[data-theme="dark"] .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="search"],
-:root[data-theme="dark"] .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop select,
-body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="text"],
-body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="number"],
-body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="search"],
-body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop select,
-.app.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="text"],
-.app.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="number"],
-.app.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="search"],
-.app.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop select {
+:is(.window-app, .application).sw-shop-window.sw-shop--dark:not(.vendor) .window-content .sw-shop input[type="text"],
+:is(.window-app, .application).sw-shop-window.sw-shop--dark:not(.vendor) .window-content .sw-shop input[type="number"],
+:is(.window-app, .application).sw-shop-window.sw-shop--dark:not(.vendor) .window-content .sw-shop input[type="search"],
+:is(.window-app, .application).sw-shop-window.sw-shop--dark:not(.vendor) .window-content .sw-shop select,
+:root[data-theme="dark"] :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="text"],
+:root[data-theme="dark"] :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="number"],
+:root[data-theme="dark"] :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="search"],
+:root[data-theme="dark"] :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop select,
+body.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="text"],
+body.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="number"],
+body.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="search"],
+body.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop select,
+.app.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="text"],
+.app.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="number"],
+.app.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input[type="search"],
+.app.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop select {
     border-color: #d0d0d0;
     background: #1a1a1a;
     color: #f5f5f5;
 }
 
-.window-app.sw-shop-window.sw-shop--dark:not(.vendor) .window-content .sw-shop input:focus,
-:root[data-theme="dark"] .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input:focus,
-body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input:focus,
-.app.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input:focus,
-.window-app.sw-shop-window.sw-shop--dark:not(.vendor) .window-content .sw-shop select:focus,
-:root[data-theme="dark"] .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop select:focus,
-body.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop select:focus,
-.app.dark .window-app.sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop select:focus {
+:is(.window-app, .application).sw-shop-window.sw-shop--dark:not(.vendor) .window-content .sw-shop input:focus,
+:root[data-theme="dark"] :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input:focus,
+body.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input:focus,
+.app.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop input:focus,
+:is(.window-app, .application).sw-shop-window.sw-shop--dark:not(.vendor) .window-content .sw-shop select:focus,
+:root[data-theme="dark"] :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop select:focus,
+body.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop select:focus,
+.app.dark :is(.window-app, .application).sw-shop-window:not(.vendor):not(.sw-shop--light) .window-content .sw-shop select:focus {
     outline-color: #ffffff;
 }
